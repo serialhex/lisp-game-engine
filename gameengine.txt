@@ -1,0 +1,30 @@
+Things to do 
+
+Drawing must be deferred so you can sort after the fact
+
+	Draw instructions not operations
+
+	Instruction structure? should be just the exact same draw call but deferred
+
+	Could be macro
+
+Decent solution to state machine
+
+More interactive programming capabilities
+
+Move screen and sdl stuff to class
+
+Animation
+
+
+
+Keyboard and joystick needs to get captured and relayed to objects
+
+	 I like the java listener model
+
+	 EG make a keyboard event listener
+
+	 when object constructed add to list of listeners for that event
+
+	 keyboard events sent to all listeners
+
