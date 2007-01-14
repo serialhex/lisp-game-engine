@@ -12,25 +12,29 @@
 
 (in-package :sprites)
 
+; hash table of surfaces (to image filenames)
+(defparameter *bmp-surfaces* (make-image-cache))
+
 (defstruct sprite-def-frame name x1 y1 x2 y2)
 (defstruct sprite-def bmp-file background-colour frames)
 
-;;;; hash table of bmp filenames for each sprite and sdl surfaces
-;;;; associated with them. 
+;;;; The image cache is a hash table of bmp filenames for each sprite 
+;;;; and sdl surface associated with them. 
+
 (defun make-image-cache()
+  "Initialise the image cache"
   (make-hash-table :test #'equal))
 
-(defparameter *bmp-surfaces* (make-image-cache))
-
 (defun flush-image-cache()
+  "Flushes the image cache, freeing all the surfaces"
   (loop for v being the hash-values of *bmp-surfaces* do 
 	(sdl-cffi::SDL-Free-Surface (sdl:fp v)))
   (setf *bmp-surfaces* (make-image-cache)))
 
 (defun load-sprite-image(sprite-def-1)
-  "given a sprite def load in it's source bmp and make a surface with the appropriate colour key"
+  "Given a sprite def load in it's source bmp and make a surface with the appropriate colour key"
   (let ((surface (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*)))
-    (unless surface
+    (unless surface ; if the surface exists just exit
       (let ((surface (sdl:convert-surface
 		      :surface (sdl:load-image (sprite-def-bmp-file sprite-def-1) #P".") 
 		      :key-color (sprite-def-background-colour sprite-def-1))))
@@ -41,9 +45,11 @@
 	  (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
 
 (defun get-sprite-frame-with-index(frame-list index)
+  "Given a list of frames return the one with index provided"
   (sprite-def-frame-name (nth index frame-list)))
 
 (defun get-sprite-frame(frame-list frame)
+  "Find a frame with the name given"
   (if (null frame-list)
       (error "could not find frame ~a~%" frame))
   (if (eql (sprite-def-frame-name (car frame-list)) frame)
@@ -51,6 +57,7 @@
     (get-sprite-frame(cdr frame-list) frame)))
 
 (defun draw-sprite(screen x y sprite-def target-frame)
+  "Draw a sprite"
   (load-sprite-image sprite-def) ; ensure bmp is loaded (will only load once)
   (let* ((surface (gethash (sprite-def-bmp-file sprite-def) *bmp-surfaces*))
 	 (frame (get-sprite-frame (sprite-def-frames sprite-def) target-frame))

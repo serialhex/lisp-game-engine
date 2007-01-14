@@ -40,8 +40,8 @@
 			  :vx 0.0 :vy 0.0
 			  :ax (random-range -0.001 0.001) :ay (random-range -0.001 0.001)
 			  :ax 0.0 :ay 0.0
-			  :sprite-def waddle-sprite :current-frame 'waddle-idle-2
-			  :speed 2.0)
+			  :sprite-def waddle-sprite :current-frame 'waddle-idle-1
+			  :speed 4.0)
 	   *game-objects*))))
 
 (defun update-game-objects()
@@ -53,19 +53,19 @@
 	(draw game-object)))
 
 (defun game1()
-  "example of game engine"
+  "game engine example"
   (sdl:with-init ()			;Initialise SDL
       (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
-      (sdl:window *WINDOW-WIDTH* *WINDOW-WIDTH* :title-caption "simple game engine" :icon-caption "simple game engine")
+      (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "Game engine" :icon-caption "Game engine")
       (progn 
 	;; init your game
 	(sdl:initialise-default-font)
 	(init-game-objects)
 	(sdl:with-events  ()
 	  (:quit-event () t)
-	  (:keydown (:key key)
-		    (if (sdl:key= key :SDLK_ESCAPE)
-			(sdl:push-quit-event)))
+	  (:key-down-event (:key key)
+			   (if (sdl:key= key :SDL-KEY-ESCAPE)
+			       (sdl:push-quit-event)))
 	  (:idle () ;; redraw screen on idle
 		 ;; fill the background
 		 (sdl:clear-display (sdl:color :r #x22 :g #x22 :b #x44))
