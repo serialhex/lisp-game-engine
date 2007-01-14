@@ -1,10 +1,7 @@
 ;;;; Simple game engine
-; (C)2006 Justin Heyes-Jones
+; (C)2007 Justin Heyes-Jones
 
 (in-package #:cl-user)  
-
-; set font load path
-(defvar *font-path* (merge-pathnames "font.bmp" (or *load-truename* *default-pathname-defaults*)))
 
 ; TEMP load in other files here instead of as package
 ; TODO load in a loader file 
@@ -12,7 +9,6 @@
 ; window or screen height TODO this must go somewhere better
 (defparameter *WINDOW-WIDTH* 640)
 (defparameter *WINDOW-HEIGHT* 480)
-(defparameter *display-surface* nil)
 
 ;;;; SYSTEMS
 (load "sprites.lisp") ; sprite drawing and management
@@ -36,52 +32,54 @@
 
 (defun init-game-objects()
   ; add some game objects
-  (let ((num-objects 500))
-    (loop for count to num-objects do
+  (let ((num-objects 5))
+    (loop for count from 1 to num-objects do
 	  (push
-	   (make-instance 'game-sprite-object :x (random-range 0.0 640.0) :y (random-range 0.0 480.0) 
+	   (make-instance 'physics-sprite 
+			  :x (random-range 0.0 640.0) :y (random-range 0.0 480.0) 
 			  :vx 0.0 :vy 0.0
-			  :ax (random-range -0.01 0.01) :ay (random-range -0.01 0.01)
-			  :sprite-def waddle-sprite :current-frame 'waddle-idle-2)
+			  :ax (random-range -0.001 0.001) :ay (random-range -0.001 0.001)
+			  :ax 0.0 :ay 0.0
+			  :sprite-def waddle-sprite :current-frame 'waddle-idle-2
+			  :speed 2.0)
 	   *game-objects*))))
 
 (defun update-game-objects()
   (loop for game-object in *game-objects* do
-	(update game-object (/ 1.0 (sdl:get-framerate)))))
+	(update game-object (/ 1.0 (sdl:frame-rate)))))
 
 (defun draw-game-objects()
   (loop for game-object in *game-objects* do
 	(draw game-object)))
 
 (defun game1()
-  "example of simple game"
+  "example of game engine"
   (sdl:with-init ()			;Initialise SDL
-      (sdl:set-framerate 30) ; Set target framerate (or 0 for unlimited)
-      (sdl:with-display (*WINDOW-WIDTH* *WINDOW-HEIGHT* :flags sdl:SDL_ANYFORMAT)
-      (let* ((small-font 
-	      (sdl-simple-font:initialise-font (namestring *font-path*) 4 5 
-					       "abcdefghijklmnopqrstuvwxyz:'!?_-,.()#~0123456789" #(99 0 0)))
-	     (text-image (sdl-simple-font:make-text-image small-font "draw text image")))
+      (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
+      (sdl:window *WINDOW-WIDTH* *WINDOW-WIDTH* :title-caption "simple game engine" :icon-caption "simple game engine")
+      (progn 
 	;; init your game
+	(sdl:initialise-default-font)
 	(init-game-objects)
 	(sdl:with-events  ()
-	  (:quit () t)
+	  (:quit-event () t)
 	  (:keydown (:key key)
 		    (if (sdl:key= key :SDLK_ESCAPE)
-			(sdl:push-quitevent)))
+			(sdl:push-quit-event)))
 	  (:idle () ;; redraw screen on idle
-	   ;; fill the background
-	   (sdl:clear-display :color (vector #x22 #x22 #x44))
-	   ;; Do stuff
-	   (sdl-simple-font:draw-string-centered "basic game engine demo"
-						 :surface sdl:*default-display*
-						 :font small-font 
-						 :position (sdl:point (screen-center-x) (screen-center-y)))
-	   (update-game-objects)
-	   (draw-game-objects)
-	   ;; Update the whole screen 
-	   (sdl:update-display)))
-	(sdl-simple-font:free-text-image text-image) ; clean up
-	(sdl-simple-font:close-font small-font)
-	(sprites:flush-image-cache))))
-  t)
+		 ;; fill the background
+		 (sdl:clear-display (sdl:color :r #x22 :g #x22 :b #x44))
+		 ;; Do stuff
+		 (show-frame-rate)
+		 (update-game-objects)
+		 (draw-game-objects)
+		 ;; Update the whole screen 
+		 (sdl:update-display)))
+	(sprites:flush-image-cache)
+	(setf *game-objects* nil))))
+
+(defun show-frame-rate()
+  (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
+					:surface sdl:*default-display*))
+
+

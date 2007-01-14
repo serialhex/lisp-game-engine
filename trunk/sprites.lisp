@@ -3,7 +3,12 @@
 (defpackage :sprites
   (:use #:cl #:lispbuilder-sdl)
   (:export 
-   #:flush-image-cache #:load-sprite-image #:draw-sprite))
+   #:flush-image-cache 
+   #:load-sprite-image 
+   #:draw-sprite 
+   #:get-sprite-frame-with-index
+   #:get-frame-from-time-and-speed
+   #:time-per-frame))
 
 (in-package :sprites)
 
@@ -19,18 +24,22 @@
 
 (defun flush-image-cache()
   (loop for v being the hash-values of *bmp-surfaces* do 
-	(sdl:SDL_FreeSurface v))
+	(sdl-cffi::SDL-Free-Surface v))
   (setf *bmp-surfaces* (make-image-cache)))
 
 (defun load-sprite-image(sprite-def-1)
   "given a sprite def load in it's source bmp and make a surface with the appropriate colour key"
   (let ((surface (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*)))
     (unless surface
-      (let ((surface (sdl:convert-surface-to-display-format 
-		      :surface (sdl:load-bmp (sprite-def-bmp-file sprite-def-1)) 
+      (let ((surface (sdl:convert-surface
+		      :surface (sdl:load-image (sprite-def-bmp-file sprite-def-1) #P".") 
 		      :key-color (sprite-def-background-colour sprite-def-1))))
-	(when surface
-	  (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) surface))))))
+	(if surface
+	  (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) surface)
+	  (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
+
+(defun get-sprite-frame-with-index(frame-list index)
+  (sprite-def-frame-name (nth index frame-list)))
 
 (defun get-sprite-frame(frame-list frame)
   (if (null frame-list)
@@ -46,10 +55,22 @@
 	 (sw (1+ (- (sprite-def-frame-x2 frame) (sprite-def-frame-x1 frame))))
 	 (sh (1+ (- (sprite-def-frame-y2 frame) (sprite-def-frame-y1 frame)))))
     (if surface
-	(sdl:blit-surface :src surface :dst screen 
-			  :src-rect (vector (sprite-def-frame-x1 frame) 
-					    (sprite-def-frame-y1 frame) 
-					    sw sh) 
-			  :dst-rect (sdl:point x y))
-      (error "no surface"))))
+	(sdl-base::with-rectangles ((src-rect) (dst-rect))
+	  (setf (sdl-base::rect-x src-rect) (sprite-def-frame-x1 frame)
+		(sdl-base::rect-y src-rect) (sprite-def-frame-y1 frame)
+		(sdl-base::rect-w src-rect) sw
+		(sdl-base::rect-h src-rect) sh)
+	  (setf (sdl-base::rect-x dst-rect) x
+		(sdl-base::rect-y dst-rect) y)
+	  (sdl-base:blit-surface (sdl:fp surface) (sdl:fp screen)
+				 src-rect  dst-rect)
+	(error "no surface")))))
+
+(defun get-frame-from-time-and-speed(num-frames speed time)
+  "Given the number of frames in an animation and the speed, figure out which frame to be playing at a given time"
+  (mod (floor (/ time (time-per-frame speed))) num-frames))
+  
+(defun time-per-frame(speed) 
+  "How long each animation frame takes"
+  (/ 1.0 speed))
     
