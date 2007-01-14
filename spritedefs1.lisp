@@ -8,8 +8,11 @@
 (defparameter waddle-frames
   (list 
    (sprites::make-sprite-def-frame :name 'waddle-idle-1 :x1 13 :y1 17 :x2 36 :y2 39)
-   (sprites::make-sprite-def-frame :name 'waddle-idle-2 :x1 39 :y1 17 :x2 62 :y2 39)))
+   (sprites::make-sprite-def-frame :name 'waddle-idle-2 :x1 39 :y1 17 :x2 62 :y2 39)
+   (sprites::make-sprite-def-frame :name 'waddle-fireball-right :x1 39 :y1 222 :x2 62 :y2 248)
+   (sprites::make-sprite-def-frame :name 'waddle-fireball-left :x1 276 :y1 235 :x2 305 :y2 260)
+))
 
 (defparameter waddle-sprite
-  (sprites::make-sprite-def :bmp-file "waddle.bmp" :background-colour (vector 255 255 255) :frames waddle-frames))
+  (sprites::make-sprite-def :bmp-file "waddle.bmp" :background-colour (sdl:color :r 255 :g 255 :b 255) :frames waddle-frames))
 
