@@ -24,7 +24,7 @@
 
 (defun flush-image-cache()
   (loop for v being the hash-values of *bmp-surfaces* do 
-	(sdl-cffi::SDL-Free-Surface v))
+	(sdl-cffi::SDL-Free-Surface (sdl:fp v)))
   (setf *bmp-surfaces* (make-image-cache)))
 
 (defun load-sprite-image(sprite-def-1)
@@ -35,7 +35,9 @@
 		      :surface (sdl:load-image (sprite-def-bmp-file sprite-def-1) #P".") 
 		      :key-color (sprite-def-background-colour sprite-def-1))))
 	(if surface
-	  (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) surface)
+	    (progn 
+	      (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) surface)
+	      (format t "loaded ~a ptr ~a~%" (sprite-def-bmp-file sprite-def-1) (sdl:fp surface)))
 	  (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
 
 (defun get-sprite-frame-with-index(frame-list index)
@@ -63,8 +65,8 @@
 	  (setf (sdl-base::rect-x dst-rect) x
 		(sdl-base::rect-y dst-rect) y)
 	  (sdl-base:blit-surface (sdl:fp surface) (sdl:fp screen)
-				 src-rect  dst-rect)
-	(error "no surface")))))
+				 src-rect  dst-rect))
+	(error "no surface"))))
 
 (defun get-frame-from-time-and-speed(num-frames speed time)
   "Given the number of frames in an animation and the speed, figure out which frame to be playing at a given time"
