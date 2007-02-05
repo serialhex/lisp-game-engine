@@ -26,8 +26,18 @@
    (speed :initform 0.0 :initarg :speed)
    (time-playing :initform 0.0 :initarg :time-playing)))
 
+;;;; a simple rectangle with a color and width/height
+(defclass colored-rectangle (object)
+  ((w :initarg nil :initarg :w)
+   (h :initarg nil :initarg :h)
+   (color :initarg nil :initarg :color)))
+
+;;;; a colored rectangle with phsyics
+(defclass physics-rectangle (colored-rectangle physics) 
+  ())
+
 ;;;; a sprite with physics
-(defclass physics-sprite (sprite physics)
+(defclass physics-sprite (sprite physics) 
   ())
 
 (defmethod initialise((object sprite))
@@ -72,6 +82,13 @@
 		  (setf y *WINDOW-HEIGHT*))
   ;(call-next-method)))
 ))
+
+(defmethod draw((object colored-rectangle))
+  "draw a colored-rectangle"
+  (with-slots (x y w h color) object
+    (sdl:draw-box (sdl:rectangle :x x :y y :w w :h h)
+		  :color color
+		  :surface sdl:*default-display*)))
 
 (defmethod draw((object sprite))
   (with-slots (x y sprite-def current-frame ) object
