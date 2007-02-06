@@ -48,7 +48,7 @@
 
 (defmethod get-acceleration-due-to-gravity((source gravity-source) (object physics))
   (let ((d (get-distance source object)))
-    (* (/ 1.0 d) (slot-value source gravity))))
+    (* (/ 1.0 d) (slot-value source 'gravity))))
 
 ; todo this should be part of the engine maybe?
 (defun init-game-objects()
