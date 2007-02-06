@@ -12,9 +12,6 @@
 
 (in-package :sprites)
 
-; hash table of surfaces (to image filenames)
-(defparameter *bmp-surfaces* (make-image-cache))
-
 (defstruct sprite-def-frame name x1 y1 x2 y2)
 (defstruct sprite-def bmp-file background-colour frames)
 
@@ -24,6 +21,9 @@
 (defun make-image-cache()
   "Initialise the image cache"
   (make-hash-table :test #'equal))
+
+; hash table of surfaces (to image filenames)
+(defparameter *bmp-surfaces* (make-image-cache))
 
 (defun flush-image-cache()
   "Flushes the image cache, freeing all the surfaces"
