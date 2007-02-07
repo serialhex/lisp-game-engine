@@ -9,6 +9,9 @@
 (defgeneric draw((object object)))
 (defgeneric shutdown((object object)))
 
+(defmethod update((object object) time-elapsed)
+  )
+
 ;;;; an object that knows about physics
 ; handles collisions, acceleration, position and shape
 (defclass physics (object)
@@ -31,6 +34,9 @@
   ((w :initarg nil :initarg :w)
    (h :initarg nil :initarg :h)
    (color :initarg nil :initarg :color)))
+
+(defmethod update((object colored-rectangle) time-elapsed)
+  (call-next-method))
 
 ;;;; a colored rectangle with phsyics
 (defclass physics-rectangle (colored-rectangle physics) 
@@ -80,8 +86,7 @@
 		  (setf x *WINDOW-WIDTH*))
 	      (if (< y 0.0)
 		  (setf y *WINDOW-HEIGHT*))
-  ;(call-next-method)))
-))
+  (call-next-method)))
 
 (defmethod draw((object colored-rectangle))
   "draw a colored-rectangle"
