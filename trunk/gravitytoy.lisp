@@ -41,19 +41,39 @@
 (defclass gravity-source(physics-rectangle)
   ((gravity :initform 0.0 :initarg :gravity)))
 
+(defun sqr(n) (* n n))
+
+(defmethod update((object gravity-source) time-elapsed)
+  "Apply gravity to all nearby objects"
+  (dolist (item *game-objects*)
+    (unless (eql (type-of item) 'gravity-source)
+      (progn
+	(let ((a (get-acceleration-due-to-gravity object item)))
+	  (with-slots ((x1 x) (y1 y)) item
+		      (with-slots ((x2 x) (y2 y)) object
+				  (let* ((dx (- x2 x1)) (dy (- y2 y1))
+					 (h (sqrt (+ (sqr dx) (sqr dy))))
+					 (scale (/ a h)))
+				    (setf (slot-value item 'ax) (* scale dx))
+				    (setf (slot-value item 'ay) (* scale dy))))))))))
+
 (defmethod get-distance((object1 physics) (object2 physics))
   (with-slots ((x1 x) (y1 y)) object1
     (with-slots ((x2 x) (y2 y)) object2
-      (sqrt (+ (* x1 x2) (* y1 y2)))))) 
+      (sqrt (+ (sqr (- x1 x2)) (sqr (- y1 y2)))))) )
 
 (defmethod get-acceleration-due-to-gravity((source gravity-source) (object physics))
   (let ((d (get-distance source object)))
-    (* (/ 1.0 d) (slot-value source 'gravity))))
+    (if (= d 0.0)
+	0.0
+      (* 1.0 (/ 100.0 (sqr d))))))
+
+;      (min 255 (* 255 (/ 10000.0 (* d d)))))))
 
 ; todo this should be part of the engine maybe?
 (defun init-game-objects()
   ; add game objects to update loop
-  (let ((num-objects 50))
+  (let ((num-objects 40))
   ; add some gravity to screen center
     (push
      (make-instance 'gravity-source
@@ -101,7 +121,7 @@
 		 ;; fill the background
 		 (sdl:clear-display (sdl:color :r #x22 :g #x22 :b #x44))
 		 ;; Do stuff
-		 (show-frame-rate)
+;		 (show-frame-rate)
 		 (update-game-objects)
 		 (draw-game-objects)
 		 ;; Update the whole screen 
