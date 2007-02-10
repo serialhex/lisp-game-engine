@@ -16,6 +16,10 @@
 ;;;; GAME 
 (load "gameobjects.lisp") ; generic game objects
 
+(load "circular-queue.lisp")
+
+(load "trail-physics-rectangle.lisp")
+
 ;;;; DATA 
 
 ; a list of game objects
@@ -87,12 +91,9 @@
     (loop for count from 1 to num-objects do
 	  ; add a bunch of other stuff
 	  (push
-	   (make-instance 'physics-rectangle
-			  :x (random-range 0.0 640.0) :y (random-range 0.0 480.0) 
-			  :w 1 :h 1
-			  :vx (random-range -3.0 3.0) :vy (random-range -3.0 3.0)
-			  :ax 0.0 :ay 0.0
-			  :color (sdl:color :r 244 :g 244 :b 244))
+	   (make-trail-physics-rectangle (random-range 0.0 640.0) (random-range 0.0 480.0)  
+					 (random-range -3.0 3.0) (random-range -3.0 3.0)
+					 (sdl:color :r 244 :g 244 :b 244) (sdl:color :r 14 :g 14 :b 14) 50)
 	   *game-objects*))))
 
 (defun update-game-objects()
