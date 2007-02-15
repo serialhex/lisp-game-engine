@@ -99,7 +99,7 @@
   (loop for game-object in *game-objects* do
 	(draw game-object)))
 
-(defun gravity-toy()
+(defun gravitytoy()
   "gravity toy"
   (sdl:with-init ()			;Initialise SDL
       (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
