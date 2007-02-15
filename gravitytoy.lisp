@@ -10,6 +10,10 @@
 (defparameter *WINDOW-WIDTH* 640)
 (defparameter *WINDOW-HEIGHT* 480)
 
+;;;; UTIL
+
+(load "util.lisp")
+
 ;;;; SYSTEMS
 (load "sprites.lisp") ; sprite drawing and management
 
@@ -26,33 +30,28 @@
 ; todo this should be part of the engine maybe?
 (defparameter *game-objects* nil)
 
-;;; todo this should go in a util file
-(defun screen-center-x() (ash *window-width* -1))
-(defun screen-center-y() (ash *window-height* -1))
-
-;;; todo this should go in a util file
 (defun show-frame-rate()
   (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
 					:surface sdl:*default-display*))
 
-;;; todo this should go in a util file
-(defun random-range(min max)
-  (let ((diff (abs (- min max))))
-    (+ min (random diff))))
 
 ; specific objects for this game
 
+; todo physical constants
+(defconstant *max-gravity* 1.3)
+(defconstant *start-speed* 0.6)
+
+; todo own file
 (defclass gravity-source(physics-rectangle)
   ((gravity :initform 0.0 :initarg :gravity)))
-
-(defun sqr(n) (* n n))
 
 (defmethod update((object gravity-source) time-elapsed)
   "Apply gravity to all nearby objects"
   (dolist (item *game-objects*)
     (unless (eql (type-of item) 'gravity-source)
       (progn
-	(let ((a (get-acceleration-due-to-gravity object item)))
+	(let* ((b (* time-elapsed (get-acceleration-due-to-gravity object item)))
+	       (a (clamp b (- *max-gravity*) (+ *max-gravity*))))
 	  (with-slots ((x1 x) (y1 y)) item
 		      (with-slots ((x2 x) (y2 y)) object
 				  (let* ((dx (- x2 x1)) (dy (- y2 y1))
@@ -70,30 +69,26 @@
   (let ((d (get-distance source object)))
     (if (= d 0.0)
 	0.0
-      (* 1.0 (/ 100.0 (sqr d))))))
+      (* 10000.0 (/ 1.0 (sqr d))))))
 
-;      (min 255 (* 255 (/ 10000.0 (* d d)))))))
+; todo gameobjects
+(defmacro add-object(object)
+  `(push ,object *game-objects*))
 
-; todo this should be part of the engine maybe?
+; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (let ((num-objects 40))
+  (let ((num-objects 50))
   ; add some gravity to screen center
-    (push
-     (make-instance 'gravity-source
-		    :x 320.0 :y 240.0
-		    :w 1 :h 1
-		    :vx 0.0 :vy 0.0
-		    :ax 0.0 :ay 0.0
-		    :color (sdl:color :r 244 :g 9 :b 9)
-		    :gravity 10.0)
-     *game-objects*)
+    (add-object (make-instance 'gravity-source :x 320.0 :y 240.0
+		    :w 1 :h 1 :vx 0.0 :vy 0.0 :ax 0.0 :ay 0.0
+		    :color (sdl:color :r 244 :g 9 :b 9) :gravity 10.0))
     (loop for count from 1 to num-objects do
 	  ; add a bunch of other stuff
 	  (push
 	   (make-trail-physics-rectangle (random-range 0.0 640.0) (random-range 0.0 480.0)  
 					 (random-range -3.0 3.0) (random-range -3.0 3.0)
-					 (sdl:color :r 244 :g 244 :b 244) (sdl:color :r 14 :g 14 :b 14) 50)
+					 (sdl:color :r 244 :g 244 :b 244) (sdl:color :r 14 :g 14 :b 14) 10)
 	   *game-objects*))))
 
 (defun update-game-objects()

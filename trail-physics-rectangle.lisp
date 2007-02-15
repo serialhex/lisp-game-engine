@@ -2,8 +2,6 @@
 ;;;; all hail, trail-physics-rectangle
 ;;;; requires that circular-queue.lisp was loaded
 
-
-
 ;;;; a colored rectangle with phsyics
 (defclass trail-physics-rectangle (colored-rectangle physics) 
   ((trail :initform nil :initarg :trail)
@@ -23,10 +21,14 @@
 (defmethod draw((object trail-physics-rectangle))
   "draw trail"
   (with-slots (trail color end-color) object
-    (cq-iterate (pos trail)
-      (sdl:draw-box (sdl:rectangle :x (first pos) :y (second pos) :w 1 :h 1)
-		    :color color
-		    :surface sdl:*default-display*)))
+	      (let ((ndx 0) (len (circular-queue-size trail)))
+		(cq-iterate (pos trail)
+			    (sdl:draw-box (sdl:rectangle :x (first pos) :y (second pos) :w 1 :h 1)
+					  :color (interp-sdl-color color end-color 
+								   (/ (- len ndx) 
+								      (circular-queue-size trail)))
+					  :surface sdl:*default-display*)
+			    (incf ndx))))
   (call-next-method))
 
 
