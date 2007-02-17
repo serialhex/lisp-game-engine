@@ -1,10 +1,7 @@
-;;;; Simple game engine
+;;;; Gravity Toy
 ; (C)2007 Justin Heyes-Jones
 
 (in-package #:cl-user)  
-
-; TEMP load in other files here instead of as package
-; TODO load in a loader file 
 
 ; window or screen height TODO this must go somewhere better
 (defparameter *WINDOW-WIDTH* 640)
@@ -88,7 +85,7 @@
 	  (push
 	   (make-trail-physics-rectangle (random-range 0.0 640.0) (random-range 0.0 480.0)  
 					 (random-range -3.0 3.0) (random-range -3.0 3.0)
-					 (sdl:color :r 244 :g 244 :b 244) (sdl:color :r 14 :g 14 :b 14) 10)
+					 (sdl:color :r 255 :g 200 :b 200) (sdl:color :r 14 :g 14 :b 14) 5)
 	   *game-objects*))))
 
 (defun update-game-objects()
@@ -115,7 +112,7 @@
 			       (sdl:push-quit-event)))
 	  (:idle () ;; redraw screen on idle
 		 ;; fill the background
-		 (sdl:clear-display (sdl:color :r #x22 :g #x22 :b #x44))
+		 (sdl:clear-display (sdl:color :r #x00 :g #x00 :b #x00))
 		 ;; Do stuff
 ;		 (show-frame-rate)
 		 (update-game-objects)

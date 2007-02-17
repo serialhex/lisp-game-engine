@@ -21,14 +21,12 @@
 (defmethod draw((object trail-physics-rectangle))
   "draw trail"
   (with-slots (trail color end-color) object
-	      (let ((ndx 0) (len (circular-queue-size trail)))
-		(cq-iterate (pos trail)
-			    (sdl:draw-box (sdl:rectangle :x (first pos) :y (second pos) :w 1 :h 1)
-					  :color (interp-sdl-color color end-color 
-								   (/ (- len ndx) 
-								      (circular-queue-size trail)))
-					  :surface sdl:*default-display*)
-			    (incf ndx))))
+    (let ((ndx 0))
+      (cq-iterate-pairs (pos1 pos2 trail)
+	(sdl:draw-line-* (first pos1) (second pos1) (first pos2) (second pos2) 
+			 :color (interp-sdl-color end-color color (/ ndx (circular-queue-count trail)))
+			 :surface sdl:*default-display*)
+	(incf ndx))))
   (call-next-method))
 
 
