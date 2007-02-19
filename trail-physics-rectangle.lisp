@@ -15,8 +15,7 @@
 
 (defmethod update((object trail-physics-rectangle) time-elapsed)
   "add current position to trail"
-  (cq-add-back (list (slot-value object 'x) (slot-value object 'y)) (slot-value object 'trail))
-  (call-next-method))
+  (cq-add-back (list (slot-value object 'x) (slot-value object 'y)) (slot-value object 'trail)))
 
 (defmethod draw((object trail-physics-rectangle))
   "draw trail"

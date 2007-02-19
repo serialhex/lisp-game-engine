@@ -75,17 +75,15 @@
 	      (incf y vy)
 
   ; handle collisions
-  ; TODO
-  ; wrap on screen
-	      (if (> x *WINDOW-WIDTH*)
-		  (setf x 0.0))
-	      (if (> y *WINDOW-HEIGHT*)
-		  (setf y 0.0))
-		
-	      (if (< x 0.0)
-		  (setf x *WINDOW-WIDTH*))
-	      (if (< y 0.0)
-		  (setf y *WINDOW-HEIGHT*))
+
+	      (if (or (> x *WINDOW-WIDTH*) (< x 0.0))
+		  (progn 
+;		    (format t "new vx ~a from ~a~%" (- vx) vx)
+		    (setf vx (- vx))))
+	      (if (or (> y *WINDOW-HEIGHT*) (< y 0.0))
+		  (setf vy (- vy)))
+
+
   (call-next-method)))
 
 (defmethod draw((object colored-rectangle))

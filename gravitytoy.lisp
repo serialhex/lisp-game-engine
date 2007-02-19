@@ -75,7 +75,7 @@
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (let ((num-objects 50))
+  (let ((num-objects 10))
   ; add some gravity to screen center
     (add-object (make-instance 'gravity-source :x 320.0 :y 240.0
 		    :w 1 :h 1 :vx 0.0 :vy 0.0 :ax 0.0 :ay 0.0
@@ -84,7 +84,7 @@
 	  ; add a bunch of other stuff
 	  (push
 	   (make-trail-physics-rectangle (random-range 0.0 640.0) (random-range 0.0 480.0)  
-					 (random-range -3.0 3.0) (random-range -3.0 3.0)
+					 (random-range -4.0 4.0) (random-range -4.0 4.0)
 					 (sdl:color :r 255 :g 200 :b 200) (sdl:color :r 14 :g 14 :b 14) 5)
 	   *game-objects*))))
 
