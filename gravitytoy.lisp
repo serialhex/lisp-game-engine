@@ -35,8 +35,10 @@
 ; specific objects for this game
 
 ; todo physical constants
-(defconstant *max-gravity* 1.3)
-(defconstant *start-speed* 0.6)
+(defparameter *max-gravity* 4.0)
+(defparameter *max-gravity-distance* 200.0)
+
+(defconstant *start-speed* 4.0)
 
 ; todo own file
 (defclass gravity-source(physics-rectangle)
@@ -47,15 +49,14 @@
   (dolist (item *game-objects*)
     (unless (eql (type-of item) 'gravity-source)
       (progn
-	(let* ((b (* time-elapsed (get-acceleration-due-to-gravity object item)))
-	       (a (clamp b (- *max-gravity*) (+ *max-gravity*))))
+	(let* ((a (* time-elapsed (get-acceleration-due-to-gravity object item))))
 	  (with-slots ((x1 x) (y1 y)) item
 		      (with-slots ((x2 x) (y2 y)) object
 				  (let* ((dx (- x2 x1)) (dy (- y2 y1))
 					 (h (sqrt (+ (sqr dx) (sqr dy))))
 					 (scale (/ a h)))
 				    (setf (slot-value item 'ax) (* scale dx))
-				    (setf (slot-value item 'ay) (* scale dy))))))))))
+				    (setf (slot-value item 'ay) (* scale dy))))))))))x
 
 (defmethod get-distance((object1 physics) (object2 physics))
   (with-slots ((x1 x) (y1 y)) object1
@@ -64,9 +65,9 @@
 
 (defmethod get-acceleration-due-to-gravity((source gravity-source) (object physics))
   (let ((d (get-distance source object)))
-    (if (= d 0.0)
+    (if (> d *max-gravity-distance*)
 	0.0
-      (* 10000.0 (/ 1.0 (sqr d))))))
+      (* *max-gravity* (/ 1.0 (sqr d))))))
 
 ; todo gameobjects
 (defmacro add-object(object)
@@ -75,7 +76,7 @@
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (let ((num-objects 10))
+  (let ((num-objects 50))
   ; add some gravity to screen center
     (add-object (make-instance 'gravity-source :x 320.0 :y 240.0
 		    :w 1 :h 1 :vx 0.0 :vy 0.0 :ax 0.0 :ay 0.0
@@ -84,8 +85,9 @@
 	  ; add a bunch of other stuff
 	  (push
 	   (make-trail-physics-rectangle (random-range 0.0 640.0) (random-range 0.0 480.0)  
-					 (random-range -4.0 4.0) (random-range -4.0 4.0)
-					 (sdl:color :r 255 :g 200 :b 200) (sdl:color :r 14 :g 14 :b 14) 5)
+					 (random-range (- *start-speed*) *start-speed*)
+					 (random-range (- *start-speed*) *start-speed*)
+					 (sdl:color :r 255 :g 0 :b 0) (sdl:color :r 255 :g 255 :b 0) 15)
 	   *game-objects*))))
 
 (defun update-game-objects()

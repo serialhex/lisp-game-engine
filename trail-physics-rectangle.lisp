@@ -15,7 +15,8 @@
 
 (defmethod update((object trail-physics-rectangle) time-elapsed)
   "add current position to trail"
-  (cq-add-back (list (slot-value object 'x) (slot-value object 'y)) (slot-value object 'trail)))
+  (cq-add-back (list (slot-value object 'x) (slot-value object 'y)) (slot-value object 'trail))
+  (call-next-method))
 
 (defmethod draw((object trail-physics-rectangle))
   "draw trail"
@@ -26,7 +27,8 @@
 			 :color (interp-sdl-color end-color color (/ ndx (circular-queue-count trail)))
 			 :surface sdl:*default-display*)
 	(incf ndx))))
-  (call-next-method))
+)
+;  (call-next-method))
 
 
 

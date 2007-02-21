@@ -35,3 +35,26 @@
     (setf (sdl:g cnew) (+ (sdl:g c1) (* scale dg)))
     (setf (sdl:b cnew) (+ (sdl:b c1) (* scale db)))
     cnew))
+
+(defun rads-degs(rads) (* rads (/ 360.0 (* 2 PI))))
+
+(defun degs-rads(degs) (* degs (/ (* 2 PI) 360.0)))
+
+(defun atan2(x y) 
+  (if (= x 0.0) 
+      (if (> y 0.0)
+	  0.0
+	PI)
+    (let ((at (atan (/ x y))))
+      (if (> x 0.0) 
+	  (if (> y 0.0)
+	      at
+	    (+ PI at))
+	(if (> y 0.0)
+	    (+ PI PI at)
+	  (+ PI at))))))
+
+
+
+
+

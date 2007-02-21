@@ -90,7 +90,7 @@
   "draw a colored-rectangle"
   (with-slots (x y w h color) object
     (sdl:draw-box (sdl:rectangle :x x :y y :w w :h h)
-		  :color color
+		  :color (sdl:color :b 255) ; color
 		  :surface sdl:*default-display*)))
 
 (defmethod draw((object sprite))
