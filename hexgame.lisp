@@ -29,22 +29,29 @@
   (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
 					:surface sdl:*default-display*))
 
-(defparameter +click-angle+ 0.0)
+(defparameter *mouse-click-x* 0)
+(defparameter *mouse-click-y* 0)
 
-(defun show-last-click-angle()
-  (sdl:draw-string-centered-* (format nil "angle: ~a" +click-angle+) (screen-center-x) (+ 30 (screen-center-y))
-					:surface sdl:*default-display*))
-
+(defun show-debug-info()
+  (let ((hb (car *game-objects*)))
+    (sdl:draw-string-centered-* (format nil "ring: ~a index: ~a." 
+					(hb-screen-x-y-to-ring hb
+							       *mouse-click-x* *mouse-click-y*)
+					(hb-screen-x-y-to-ring-index hb
+							       *mouse-click-x* *mouse-click-y*))
+				(screen-center-x) (+ 30 (screen-center-y))
+				:surface sdl:*default-display*)))
 
 ; specific objects for this game
 
 ; todo gameobjects
-(defmacro add-object(object)
-  `(push ,object *game-objects*))
+(defun add-object(object)
+  (push object *game-objects*))
 
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
+  (add-object (make-hex-board 10 20 (screen-center-x) (screen-center-y)))
 )
 
 (defun update-game-objects()
@@ -67,10 +74,8 @@
 	(sdl:with-events  ()
 	  (:quit-event () t)
 	  (:mouse-button-down-event (:x x :y y)
-				    (setf
-				     +click-angle+ 
-				     (rads-degs
-				      (atan2 (- x (screen-center-x)) (- (- y (screen-center-y)))))))
+				    (setf *mouse-click-x* x)
+				    (setf *mouse-click-y* y))
 	  (:key-down-event (:key key)
 			   (if (sdl:key= key :SDL-KEY-ESCAPE)
 			       (sdl:push-quit-event)))
@@ -78,8 +83,8 @@
 		 ;; fill the background
 		 (sdl:clear-display (sdl:color :r #x00 :g #x00 :b #x00))
 		 ;; Do stuff
-		 (show-frame-rate)
-		 (show-last-click-angle)
+;		 (show-frame-rate)
+		 (show-debug-info)
 		 (update-game-objects)
 		 (draw-game-objects)
 		 ;; Update the whole screen 
