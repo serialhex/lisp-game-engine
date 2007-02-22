@@ -1,5 +1,7 @@
 ;;;; Various utilities
 
+; math
+
 (defun random-range(min max)
   "a random value between min and max"
   (let ((diff (abs (- min max))))
@@ -14,6 +16,31 @@
 
 (defun sqr(n) 
   (* n n))
+
+(defun rads-degs(rads) 
+  (* rads (/ 360.0 (* 2 PI))))
+
+(defun degs-rads(degs) 
+  (* degs (/ (* 2 PI) 360.0)))
+
+(defun atan2(x y) 
+  "somewhat awful but tested and working atan2"
+  (if (= y 0.0)
+      (if (< x 0.0)
+	  (+ PI (/ PI 2.0))
+	(/ PI 2.0))
+    (if (= x 0.0) 
+	(if (> y 0.0)
+	    0.0
+	  PI)
+      (let ((at (atan (/ x y))))
+	(if (> x 0.0) 
+	    (if (> y 0.0)
+		at
+	      (+ PI at))
+	  (if (> y 0.0)
+	      (+ PI PI at)
+	    (+ PI at)))))))
 
 ;;;; graphics/sdl
 
@@ -36,23 +63,6 @@
     (setf (sdl:b cnew) (+ (sdl:b c1) (* scale db)))
     cnew))
 
-(defun rads-degs(rads) (* rads (/ 360.0 (* 2 PI))))
-
-(defun degs-rads(degs) (* degs (/ (* 2 PI) 360.0)))
-
-(defun atan2(x y) 
-  (if (= x 0.0) 
-      (if (> y 0.0)
-	  0.0
-	PI)
-    (let ((at (atan (/ x y))))
-      (if (> x 0.0) 
-	  (if (> y 0.0)
-	      at
-	    (+ PI at))
-	(if (> y 0.0)
-	    (+ PI PI at)
-	  (+ PI at))))))
 
 
 
