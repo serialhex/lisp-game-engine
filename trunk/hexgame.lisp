@@ -39,8 +39,7 @@
 							       *mouse-click-x* *mouse-click-y*)
 					(hb-screen-x-y-to-ring-index hb
 							       *mouse-click-x* *mouse-click-y*))
-				(screen-center-x) (+ 50 (screen-center-y))
-				:surface sdl:*default-display*)))
+				100 15 :surface sdl:*default-display*)))
 
 ; specific objects for this game
 
@@ -51,7 +50,7 @@
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (add-object (make-hex-board 20 6 15 (screen-center-x) (screen-center-y)))
+  (add-object (make-hex-board 15 6 10 (screen-center-x) (screen-center-y)))
 )
 
 (defun update-game-objects()
@@ -66,7 +65,7 @@
   "hex game"
   (sdl:with-init ()			;Initialise SDL
       (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
-      (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "Gravity" :icon-caption "Gravity")
+      (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "Hex" :icon-caption "Hex")
       (progn
 	;; init your game
 	(sdl:initialise-default-font)
