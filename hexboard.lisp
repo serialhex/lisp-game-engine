@@ -52,7 +52,7 @@
 			      :cx x :cy y)))
     (loop for r from 0 to (1- rings) do
 	  (setf (aref (slot-value board 'rings) r)
-		(make-array (1+ (* sides r)) :adjustable nil :initial-element nil)))
+		(make-array (1+ (* (1- sides) r)) :adjustable nil :initial-element nil)))
     board))
 
 (defun hb-screen-x-y-to-ring(hb x y)
@@ -66,9 +66,10 @@
 		    (dy (- y cy))
 		    (ring (hb-screen-x-y-to-ring hb x y)))
 		(if (< ring num-rings)
-		    (let ((angle-degs (rads-degs (atan2 dx (- dy))))
-			  (items (length (aref rings ring))))
-		      (round (/ angle-degs items)))
+		    (let* ((angle-degs (rads-degs (atan2 dx (- dy))))
+			  (items (length (aref rings ring)))
+			  (item-arc (/ 360.0 items)))
+		      (round (/ angle-degs item-arc)))
 		  -1))))
 
 ;;;; todo for these two functions, validate the ring index to the vertex length
