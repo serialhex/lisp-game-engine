@@ -39,7 +39,7 @@
 							       *mouse-click-x* *mouse-click-y*)
 					(hb-screen-x-y-to-ring-index hb
 							       *mouse-click-x* *mouse-click-y*))
-				(screen-center-x) (+ 30 (screen-center-y))
+				(screen-center-x) (+ 50 (screen-center-y))
 				:surface sdl:*default-display*)))
 
 ; specific objects for this game
@@ -51,7 +51,7 @@
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (add-object (make-hex-board 10 20 (screen-center-x) (screen-center-y)))
+  (add-object (make-hex-board 20 6 15 (screen-center-x) (screen-center-y)))
 )
 
 (defun update-game-objects()
