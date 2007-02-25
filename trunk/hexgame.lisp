@@ -29,8 +29,8 @@
   (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
 					:surface sdl:*default-display*))
 
-(defparameter *mouse-click-x* 0)
-(defparameter *mouse-click-y* 0)
+(defparameter *mouse-click-x* -1)
+(defparameter *mouse-click-y* -1)
 
 (defun show-debug-info()
   (let ((hb (car *game-objects*)))
@@ -64,7 +64,7 @@
 (defun hexgame()
   "hex game"
   (sdl:with-init ()			;Initialise SDL
-      (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
+      (setf (sdl:frame-rate) 30) ; Set target framerate (or 0 for unlimited)
       (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "Hex" :icon-caption "Hex")
       (progn
 	;; init your game
