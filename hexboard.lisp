@@ -8,6 +8,7 @@
    (rings :initform nil :initarg :rings)
    (ring-radius :initform nil :initarg :ring-radius)
    (shapes :initform nil :initarg :shapes)
+   (sides :initform nil :initarg :sides)
    (cx :initform 0.0 :initarg :cx)
    (cy :initform 0.0 :initarg :cy)))
 
@@ -26,7 +27,7 @@
 			  (index (hb-screen-x-y-to-ring-index object *mouse-click-x* *mouse-click-y*)))
 		      (if (< ring num-rings)
 			  (if (< index (length (aref rings ring)))
-			      (let ((new-shape (make-shape :ring ring :index index :offsets nil)))
+			      (let ((new-shape (make-hb-shape :ring ring :index index :offsets nil)))
 				(hb-add-shape object new-shape)))))
 		    (setf *mouse-click-x* -1)
 		    (setf *mouse-click-y* -1)
@@ -72,6 +73,7 @@
 	  (setf (aref (slot-value board 'rings) r)
 		(make-array (1+ (* (1- sides) r)) :adjustable nil :initial-element nil)))
     (setf (aref (aref (slot-value board 'rings) 0) 0) t)
+    (setf (slot-value board 'sides) sides)
     board))
 
 (defun hb-screen-x-y-to-ring(hb x y)
@@ -124,13 +126,15 @@
 
 (defun hb-descend-shape(hb shape)
   (unless 
-      (hb-shape-collides-p hb shape (1- (shape-ring shape)))
-    (incf (shape-ring shape) -1)))
+      (hb-shape-collides-p hb shape (1- (hb-shape-ring shape)))
+    (let ((new-ring-indexes (length (aref (slot-value hb 'rings) (hb-shape-ring shape)))))
+      (setf (hb-shape-index shape) (mod (1- (slot-value hb 'sides) new-ring-indexes))) 
+      (decf (hb-shape-ring shape) 1))))
 
 (defun hb-shape-collides-p(hb shape ring)
   "returns true if it did not collide in the new ring position"
-  (let ((ring (shape-ring shape))
-	(index (shape-index shape)))
+  (let ((ring (hb-shape-ring shape))
+	(index (hb-shape-index shape)))
     (if (hb-get-ring-index hb ring index)
 	t
       nil)))
@@ -139,8 +143,8 @@
 (defun hb-draw-shape(hb shape)
   "draw a shape"
   ; first draw the position part
-  (let ((ring (shape-ring shape))
-	(index (shape-index shape)))
+  (let ((ring (hb-shape-ring shape))
+	(index (hb-shape-index shape)))
     (hb-draw-ring-index-color hb ring index (sdl:color :r 0 :b 255 :g 0))))
 ; todo the offsets part
 
