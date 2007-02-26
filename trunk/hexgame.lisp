@@ -50,7 +50,7 @@
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (add-object (make-hex-board 15 6 10 (screen-center-x) (screen-center-y)))
+  (add-object (make-hex-board 15 6 15 (screen-center-x) (screen-center-y)))
 )
 
 (defun update-game-objects()
