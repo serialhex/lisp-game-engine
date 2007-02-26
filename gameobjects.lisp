@@ -4,13 +4,13 @@
 (defclass object()
    ((name :initform (format nil "name_~4,'0D" (random 100)) :initarg :name)))
 
-(defgeneric initialise((object object)))
-(defgeneric update((object object) time-elapsed))
-(defgeneric draw((object object)))
-(defgeneric shutdown((object object)))
+(defgeneric initialise(object))
+(defgeneric update(object time-elapsed))
+(defgeneric draw(object))
+(defgeneric shutdown(object))
 
-(defmethod update((object object) time-elapsed)
-  )
+(defmethod update((obj object) time-elapsed) 
+)
 
 ;;;; an object that knows about physics
 ; handles collisions, acceleration, position and shape
@@ -106,10 +106,10 @@
 				:surface sdl:*default-display*
 				:position (sdl:point x y))))
 
-(defmethod shutdown((object object))
+(defmethod shutdown((obj object))
   )
 
-(defmethod shutdown((object sprite))
+(defmethod shutdown((obj sprite))
   )
 
 
