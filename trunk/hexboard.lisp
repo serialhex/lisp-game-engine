@@ -1,9 +1,10 @@
-;;;; represent a board of hexes
-;;;; 
+;;;; represent the board bits
+;;;; and the game stuff
+;;;; and I should really work on these comments
 
 (load "util.lisp")
 
-(defclass hex-board (object)
+(defclass game-board (object)
   ((num-rings :initform nil :initarg :num-rings)
    (rings :initform nil :initarg :rings)
    (ring-radius :initform nil :initarg :ring-radius)
@@ -18,9 +19,24 @@
   offsets
   imprinted)
 
-(defmethod update ((object hex-board) time-elapsed)
+(defstruct hb-offset
+  ring
+  index)
+
+(defun make-game-shape-offsets()
+  (list (list (make-hb-offset :ring -1 :index 0)
+	      (make-hb-offset :ring -2 :index 0)
+	      (make-hb-offset :ring -2 :index -1)
+	      (make-hb-offset :ring -2 :index 1))
+	(list (make-hb-offset :ring 0 :index -1)
+	      (make-hb-offset :ring 0 :index 1))))
+
+(setf game-shape-offsets (make-game-shape-offsets))
+
+(defmethod update ((object game-board) time-elapsed)
   "handle mouse clicks, set that bit of the board"
   (with-slots (rings num-rings shapes) object
+	      (hb-descend-board object)
 	      (loop for r from 1 to (1- num-rings) do
 		    (hb-clear-full-ring object r))
 	      (loop for shape in shapes do
@@ -37,7 +53,7 @@
 		      (if (< ring num-rings)
 			  (if (< index (length (aref rings ring)))
 			      (let ((new-shape (make-hb-shape :ring ring :index index 
-							      :offsets nil :imprinted nil)))
+							      :offsets (car game-shape-offsets) :imprinted nil)))
 				(hb-add-shape object new-shape)))))
 		    (setf *mouse-click-x* -1)
 		    (setf *mouse-click-y* -1)
@@ -47,21 +63,22 @@
 
 (defun hb-draw-ring-index-color(hb ring index color &optional (size 1))
   (with-slots (cx cy ring-radius rings sides) hb
-	      (let* ((frac (* PI 2.0 (/ index sides)))
-		     (x (* (sin frac) ring ring-radius))
-		     (y (* (cos frac) ring ring-radius -1.0))
-		     (val (hb-get-ring-index hb ring index)))
-		(if *debug-hb-draw*
-		    (sdl:draw-string-centered-* (format nil "r: ~a i: ~a." ring index)
-						(+ cx x) (+ cy y)
-						:surface sdl:*default-display*)
-		  (sdl:draw-box (sdl:rectangle 
-				 :x (+ cx x (/ size -2))
-				 :y (+ cy y (/ size -2))
-				 :w size :h size)
-				:color color :surface sdl:*default-display*)))))
+	      (if (>= ring 0)
+		  (let* ((frac (* PI 2.0 (/ index sides)))
+			 (x (* (sin frac) ring ring-radius))
+			 (y (* (cos frac) ring ring-radius -1.0))
+			 (val (hb-get-ring-index hb ring index)))
+		    (if *debug-hb-draw*
+			(sdl:draw-string-centered-* (format nil "r: ~a i: ~a." ring index)
+						    (+ cx x) (+ cy y)
+						    :surface sdl:*default-display*)
+		      (sdl:draw-box (sdl:rectangle 
+				     :x (+ cx x (/ size -2))
+				     :y (+ cy y (/ size -2))
+				     :w size :h size)
+				    :color color :surface sdl:*default-display*))))))
 
-(defmethod draw ((object hex-board))
+(defmethod draw ((object game-board))
   (with-slots (cx cy num-rings rings shapes sides) object
 	      (loop for ring from 0 to (1- num-rings) do
 		    (let* ((num-items sides)); todo remove
@@ -71,12 +88,12 @@
 					      (sdl:color :r 255 :g 0 :b 0) 
 					    (sdl:color :r 64 :g 64 :b 64))))
 			      (hb-draw-ring-index-color object ring index color 2)))))
-	      ; now draw the activae shapes
+	      ; now draw the active shapes
 	      (loop for shape in shapes do
 		    (hb-draw-shape object shape))))
 
-(defun make-hex-board(rings sides radius x y)
-  (let ((board (make-instance 'hex-board :num-rings rings :ring-radius radius
+(defun make-game-board(rings sides radius x y)
+  (let ((board (make-instance 'game-board :num-rings rings :ring-radius radius
 			      :rings (make-array rings :adjustable nil)
 			      :cx x :cy y :sides sides)))
     (loop for r from 0 to (1- rings) do
@@ -125,6 +142,23 @@
 		      (error "invalid ring index")
 		    (aref ring-items index))))))
 
+(defun hb-descend-board(hb)
+  "working from inner rings to outer, drop anything that can"
+  (with-slots (rings num-rings sides) hb 
+	      (loop for ring from 1 to (1- num-rings) do
+		    (loop for index from 0 to (1- sides) do
+			  (hb-descend-board-ring-index hb ring index)))))
+
+(defun hb-descend-board-ring-index(hb ring index)
+  "drop just one board item"
+  (if (and 
+       (> ring 0)
+       (hb-get-ring-index hb ring index)
+       (null (hb-get-ring-index hb (1- ring) index)))
+      (progn
+	(hb-set-ring-index hb ring index nil)
+	(hb-set-ring-index hb (1- ring) index t))))
+  
 ;;;; Shapes - an active shape (there may be more than one) is alive on the board 
 ;;;; these are handled differently to the board itself so they can 
 ;;;; a) move as shape and be blocked if part of the shape is blocked
@@ -134,9 +168,13 @@
   (hb-shape-imprinted shape))
 
 (defun hb-imprint-shape(hb shape)
-  (hb-set-ring-index hb (hb-shape-ring shape) (hb-shape-index shape) t)
-  (setf (hb-shape-imprinted shape) t))
-; TODO also do the offsets
+  (with-slots (ring index) shape
+	      (hb-set-ring-index hb ring index t)
+	      (loop for offset in (slot-value shape 'offsets) do
+		    (hb-set-ring-index hb 
+				       (+ ring (hb-offset-ring offset)) 
+				       (mod (+ index (hb-offset-index offset)) (slot-value hb 'sides)) t))
+	      (setf (hb-shape-imprinted shape) t))) ; indicate that I've been imprinted
 
 (defun hb-descend-shape(hb shape)
   "move the shape down until it would collide, then imprint it"
@@ -149,18 +187,29 @@
 (defun hb-shape-collides-p(hb shape ring)
   "returns true if it did not collide in the new ring position"
   (let ((index (hb-shape-index shape)))
-    (if (hb-get-ring-index hb ring index)
-	t
-      nil)))
-; TODO same for offsets
+    (if (hb-get-ring-index hb ring index) 
+	t ; shape origin collides
+      (progn 
+	(loop for offset in (slot-value shape 'offsets) do
+	      (if (or (< 1 (hb-offset-ring offset))
+		      (hb-get-ring-index hb 
+					 (+ ring (hb-offset-ring offset))
+					 (mod (+ index (hb-offset-index offset)) (slot-value hb 'sides))))
+		  (return-from hb-shape-collides-p t)
+		nil))
+	nil))))
 
 (defun hb-draw-shape(hb shape)
   "draw a shape"
   ; first draw the position part
   (let ((ring (hb-shape-ring shape))
 	(index (hb-shape-index shape)))
-    (hb-draw-ring-index-color hb ring index (sdl:color :r 0 :b 255 :g 0) 3)))
-; todo the offsets part
+    (hb-draw-ring-index-color hb ring index (sdl:color :r 0 :b 255 :g 0) 3)
+    (loop for offset in (slot-value shape 'offsets) do
+	  (hb-draw-ring-index-color hb 
+				    (+ ring (hb-offset-ring offset))
+				    (mod (+ index (hb-offset-index offset)) (slot-value hb 'sides))
+				    (sdl:color :r 0 :b 255 :g 0) 3))))
 
 (defun hb-add-shape(hb shape)
   "add a shape to the board"
