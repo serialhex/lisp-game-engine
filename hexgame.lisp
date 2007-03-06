@@ -81,7 +81,7 @@
 
 (defun update-game-objects()
   (loop for game-object in *game-objects* do
-	(update game-object (/ 1.0 (sdl:frame-rate)))))
+	(update game-object (sdl-cffi::SDL-Get-Ticks))))
 
 (defun draw-game-objects()
   (loop for game-object in *game-objects* do
@@ -90,7 +90,7 @@
 (defun game()
   "A game"
   (sdl:with-init () ;Initialise SDL
-      (setf (sdl:frame-rate) 20) ; Set target framerate (or 0 for unlimited)
+      (setf (sdl:frame-rate) 0) ; Set target framerate (or 0 for unlimited)
       (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "A Game" :icon-caption "A Game")
       (progn
 	;; init your game
