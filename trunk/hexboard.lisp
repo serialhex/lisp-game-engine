@@ -24,7 +24,8 @@
   index)
 
 (defun make-game-shape-offsets()
-  (list (list (make-hb-offset :ring -1 :index 0)
+  (list (list (make-hb-offset :ring -1 :index 0))
+	(list (make-hb-offset :ring -1 :index 0)
 	      (make-hb-offset :ring -2 :index 0)
 	      (make-hb-offset :ring -2 :index -1)
 	      (make-hb-offset :ring -2 :index 1))
@@ -36,7 +37,6 @@
 (defmethod update ((object game-board) time-elapsed)
   "handle mouse clicks, set that bit of the board"
   (with-slots (rings num-rings shapes) object
-	      (hb-descend-board object)
 	      (loop for r from 1 to (1- num-rings) do
 		    (hb-clear-full-ring object r))
 	      (loop for shape in shapes do
@@ -125,12 +125,10 @@
 (defun hb-set-ring-index(hb ring index value)
   "set the specified ring and index in that ring with the specified value"
   (with-slots (rings num-rings sides) hb 
-	      (if (>= ring num-rings)
-		  (error "invalid ring")
-		(let ((ring-items (aref rings ring)))
-		  (if (>= index sides)
-		      (error "invalid ring index")
-		    (setf (aref ring-items index) value))))))
+	      (if (and (>= ring 0) (< ring num-rings))
+		  (let ((ring-items (aref rings ring)))
+		    (if (< index sides)
+			(setf (aref ring-items index) value))))))
 
 (defun hb-get-ring-index(hb ring index)
   "get the value stored at the specified ring and index"
@@ -142,19 +140,19 @@
 		      (error "invalid ring index")
 		    (aref ring-items index))))))
 
-(defun hb-descend-board(hb)
-  "working from inner rings to outer, drop anything that can"
+(defun hb-descend-board(hb start-ring)
+  "working from inner rings to outer, drop everything 1"
   (with-slots (rings num-rings sides) hb 
-	      (loop for ring from 1 to (1- num-rings) do
+	      (loop for ring from start-ring to (1- num-rings) do
 		    (loop for index from 0 to (1- sides) do
 			  (hb-descend-board-ring-index hb ring index)))))
 
 (defun hb-descend-board-ring-index(hb ring index)
-  "drop just one board item"
+  "drop just one board item down one ring"
   (if (and 
        (> ring 0)
-       (hb-get-ring-index hb ring index)
-       (null (hb-get-ring-index hb (1- ring) index)))
+       (hb-get-ring-index hb ring index))
+       ;(null (hb-get-ring-index hb (1- ring) index)))
       (progn
 	(hb-set-ring-index hb ring index nil)
 	(hb-set-ring-index hb (1- ring) index t))))
@@ -224,8 +222,11 @@
 ; todo use loop body for this
 			  (setf all-set nil)))
 		(if all-set
-		    (loop for index from 0 to (1- sides) do
-			  (hb-set-ring-index hb ring index nil))))))
+		    (progn
+		      (loop for index from 0 to (1- sides) do
+			    (hb-set-ring-index hb ring index nil))
+		      (hb-descend-board hb (1+ ring)))))))
+		  
 
 ; rotate a shape
 

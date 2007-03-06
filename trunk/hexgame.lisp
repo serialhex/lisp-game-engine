@@ -90,7 +90,7 @@
 (defun game()
   "A game"
   (sdl:with-init () ;Initialise SDL
-      (setf (sdl:frame-rate) 2) ; Set target framerate (or 0 for unlimited)
+      (setf (sdl:frame-rate) 20) ; Set target framerate (or 0 for unlimited)
       (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "A Game" :icon-caption "A Game")
       (progn
 	;; init your game
