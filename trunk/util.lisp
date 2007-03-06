@@ -64,6 +64,14 @@
     cnew))
 
 
+(defun scale-sdl-color(color scale)
+  "scale a color from 0 to 1"
+  (let ((new-color (sdl:color)))
+    (setf (sdl:r new-color) (* scale (sdl:r color)))
+    (setf (sdl:g new-color) (* scale (sdl:g color)))
+    (setf (sdl:b new-color) (* scale (sdl:b color)))
+    new-color))
+
 
 
 
