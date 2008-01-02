@@ -55,8 +55,12 @@
 (defparameter *game-objects* nil)
 
 (defun show-frame-rate()
-  (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
-					:surface sdl:*default-display*))
+  (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) 
+			      (screen-center-x) 
+			      (screen-center-y)
+			      (sdl:color :r #x00 :g #x00 :b #x00)
+			      (sdl:color :r #xff :g #xff :b #xff)
+			      :surface sdl:*default-display*))
 
 (defun show-debug-info()
   (let ((hb (car *game-objects*)))
@@ -64,8 +68,11 @@
 					(hb-screen-x-y-to-ring hb
 							       *mouse-click-x* *mouse-click-y*)
 					(hb-screen-x-y-to-ring-index hb
-							       *mouse-click-x* *mouse-click-y*))
-				100 15 :surface sdl:*default-display*)))
+								     *mouse-click-x* *mouse-click-y*))
+				100 15 
+				(sdl:color :r #x00 :g #x00 :b #x00)
+				(sdl:color :r #xff :g #xff :b #xff)
+				:surface sdl:*default-display*)))
 
 ; specific objects for this game
 
@@ -90,7 +97,7 @@
 (defun game()
   "A game"
   (sdl:with-init () ;Initialise SDL
-      (setf (sdl:frame-rate) 0) ; Set target framerate (or 0 for unlimited)
+      (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
       (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "A Game" :icon-caption "A Game")
       (progn
 	;; init your game
@@ -108,7 +115,7 @@
 		 ;; fill the background
 		 (sdl:clear-display (sdl:color :r #x00 :g #x00 :b #x00))
 		 ;; Do stuff
-;		 (show-frame-rate)
+		 (show-frame-rate)
 		 ;(show-debug-info)
 		 (update-game-objects)
 		 (draw-game-objects)

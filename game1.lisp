@@ -3,6 +3,9 @@
 
 (in-package #:cl-user)  
 
+#+sbcl (defparameter *bmp-path* "/home/justinhj/lisp-game-engine/")
+#-sbcl (defparameter *bmp-path* nil)
+
 ; TEMP load in other files here instead of as package
 ; TODO load in a loader file 
 
@@ -79,7 +82,7 @@
 	(setf *game-objects* nil))))
 
 (defun show-frame-rate()
-  (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
-					:surface sdl:*default-display*))
-
+;  (sdl:draw-string-centered-* (format nil "fps: ~a" (sdl:frame-rate)) (screen-center-x) (screen-center-y)
+;					:surface sdl:*default-display*))
+)
 

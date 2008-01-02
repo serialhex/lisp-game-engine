@@ -72,7 +72,31 @@
     (setf (sdl:b new-color) (* scale (sdl:b color)))
     new-color))
 
+(defun random-range(min max)
+  "Return a random number between min and max"
+  (let ((diff (abs (- min max))))
+    (+ min (random diff))))
 
+(defun half(x)
+  "halve the value of x"
+  (/ x 2))
 
+(defun integer-in-range(num start end)
+  (let ((int (floor num)))
+    (max (min end int) start)))
 
+;;;; todo this should go somewhere that should know about screen width and height
+
+(defun sx(x)
+  (integer-in-range x 0 640))
+
+(defun sy(y)
+  (integer-in-range y 0 480))
+
+;;;; manage unique id's
+(let ((next-id 0))
+  (defun get-next-uid()
+    "get the next unique id"
+    (incf next-id)
+    (1- next-id)))
 

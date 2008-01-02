@@ -9,17 +9,17 @@
 
 ;;;; UTIL
 
-(load "util.lisp")
+(load "util")
 
 ;;;; SYSTEMS
-(load "sprites.lisp") ; sprite drawing and management
+(load "sprites") ; sprite drawing and management
 
 ;;;; GAME 
-(load "gameobjects.lisp") ; generic game objects
+(load "gameobjects") ; generic game objects
 
-(load "circular-queue.lisp")
+(load "circular-queue")
 
-(load "trail-physics-rectangle.lisp")
+(load "trail-physics-rectangle")
 
 ;;;; DATA 
 
@@ -56,7 +56,7 @@
 					 (h (sqrt (+ (sqr dx) (sqr dy))))
 					 (scale (/ a h)))
 				    (setf (slot-value item 'ax) (* scale dx))
-				    (setf (slot-value item 'ay) (* scale dy))))))))))x
+				    (setf (slot-value item 'ay) (* scale dy))))))))))
 
 (defmethod get-distance((object1 physics) (object2 physics))
   (with-slots ((x1 x) (y1 y)) object1
@@ -76,7 +76,7 @@
 ; todo gameobjects
 (defun init-game-objects()
   ; add game objects to update loop
-  (let ((num-objects 50))
+  (let ((num-objects 20))
   ; add some gravity to screen center
     (add-object (make-instance 'gravity-source :x 320.0 :y 240.0
 		    :w 1 :h 1 :vx 0.0 :vy 0.0 :ax 0.0 :ay 0.0
@@ -87,7 +87,7 @@
 	   (make-trail-physics-rectangle (random-range 0.0 640.0) (random-range 0.0 480.0)  
 					 (random-range (- *start-speed*) *start-speed*)
 					 (random-range (- *start-speed*) *start-speed*)
-					 (sdl:color :r 255 :g 0 :b 0) (sdl:color :r 255 :g 255 :b 0) 15)
+					 (sdl:color :r 255 :g 0 :b 0) (sdl:color :r 0 :g 0 :b 0) 15)
 	   *game-objects*))))
 
 (defun update-game-objects()

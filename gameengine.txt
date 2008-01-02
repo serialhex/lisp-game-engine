@@ -1,6 +1,38 @@
-Things to do 
+##############################################
 
-Drawing must be deferred so you can sort after the fact
+Notes on lisp game engine
+
+##############################################
+
+(C) 2007 Justin Heyes-Jones
+
+##############################################
+
+Things to do
+
+VHIGH Pong prototype
+
+VHIGH Global objects
+      Some way to have collision system run through all physics 
+      components and process all collision
+      Needs to be done outside of current update loop
+
+VHIGH Better way to send messages to everything (or rather not 
+      send them to everything)
+
+HIGH Object factory
+      Able to create instances of objects from a text or DSL spec
+      Instances share data if possible
+
+HIGH Decent solution to state machine
+
+HIGH More interactive programming capabilities
+
+X     split engine into init, run and quit
+       run engine as a process in various capable cl's
+       need to do deffered adding and deleting of objects midframe though
+
+MED Drawing must be deferred so you can sort after the fact
 
 	Draw instructions not operations
 
@@ -8,23 +40,171 @@ Drawing must be deferred so you can sort after the fact
 
 	Could be macro
 
-Decent solution to state machine
+X HIGH component and message passing design
 
-More interactive programming capabilities
 
-Move screen and sdl stuff to class
+
+Game component or high level object 
+
+	Has the active object list
+	Objects can be active for update and draw
+
+Level
+
+	Need a level class that can
+
+	     Store objects
+	     Insert them to the active object list
+	     Reset them to beginning values
+	     Remove its objects from the active list
 
 Animation
 
+	Need to be able to change the animation an object is doing
+	(Can do this by changing the sprite def in the animation
+	component)
 
+Message system
+
+	Objects need to be able to send messages to
+
+		specific objects by name
+X		objects that are listening for this type
+
+Physics
+
+	Detect collisions (need world representation)
+	message to colliding objects
 
 Keyboard and joystick needs to get captured and relayed to objects
 
-	 I like the java listener model
+	 Or just let player component do it?
+	 That's ok as long as you can abstract the 
+	 keys so it's configurable
 
-	 EG make a keyboard event listener
+GAME			LEVEL
 
-	 when object constructed add to list of listeners for that event
+enter level		has list of game objects
+leave level		
 
-	 keyboard events sent to all listeners
+
+Misc
+X	Make sure engine-init, run and quit cannot be used inappropriately
+
+##############################################
+Jottings....
+
+
+Data
+
+List of active Objects 
+
+     Each object has list of components 
+
+Update
+
+	For each object
+	    For each component
+	    	invoke current message (draw, update)
+     
+Also objects can send messages to each other during the update
+These messages can be deferred if need be
+
+Problem is I'd rather do something more like
+
+Update 
+
+       For each message type
+       	   For each component responding to this 
+       	       invoke message type on component
+
+To do that...
+
+Data
+
+	Components would need a list of messages they respond to
+	which is fine
+
+Update
+
+	Beginning of frame make lists of all objects responding to various
+	messages 
+
+Another problem is objects that manage all components, they don't really
+live anywhere yet (eg's: collide all objects at once, get key input and translate
+it to component messages)
+
+In the case of input I think it's fine to have it outside the system
+of objects and components and let the components access it ...
+
+Update 
+
+       Input:Update
+
+       UpdateObjects
+
+
+	.. in some component update 
+
+	   if(Input:key-space-bar)
+		fart
+
+		etc
+
+But collision is different. I need a collide message
+that is sent to the first physics object only, or some
+higher level object , and it must occur after the physics
+update.
+
+Idea 1
+
+     
+     update physics
+     	    
+	    gather physics components
+
+	    send physics 'move (instead of update)
+     	    call physics collide on list (not on component)
+
+That is not nice because it breaks the nice main loop
+
+Idea 2
+
+     Still seperate update ticks into something like
+
+     	   move, collide, think, draw
+	  
+     Main loop  
+
+     	  for each message '(move, collide ...)
+     	  find components that respond to that message
+	  invoke message on each component 
+
+     Then to solve the 'everybody needs to collide problem'
+     the collide message needs to be clever
+
+     eg: send a new frame message at beginning of frame
+     and a end frame at the end
+
+     collision system now is
+
+     	       'begin-frame 
+	       	     clear collision cache
+	       'move
+		     move the objects
+               'collide
+		     
+			
+                
+     	       
+
+##############################################
+
+
+
+
+
+
+
+
 
