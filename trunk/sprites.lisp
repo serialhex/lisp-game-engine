@@ -1,4 +1,4 @@
-;;;; SDL Drawing and low level data management for colour keyed sprites
+;;; SDL Drawing and low level data management for colour keyed sprites
 
 (defpackage :sprites
   (:use #:cl #:lispbuilder-sdl)
@@ -8,7 +8,8 @@
    #:draw-sprite 
    #:get-sprite-frame-with-index
    #:get-frame-from-time-and-speed
-   #:time-per-frame))
+   #:time-per-frame
+   #:get-sprite-frame-width-and-height))
 
 (in-package :sprites)
 
@@ -35,14 +36,17 @@
   "Given a sprite def load in it's source bmp and make a surface with the appropriate colour key"
   (let ((surface (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*)))
     (unless surface ; if the surface exists just exit
-      (let ((surface (sdl:convert-surface
-		      :surface (sdl:load-image (sprite-def-bmp-file sprite-def-1) #P".") 
-		      :key-color (sprite-def-background-colour sprite-def-1))))
-	(if surface
-	    (progn 
+;      (format t "loading image file ~a~%" (sprite-def-bmp-file sprite-def-1))
+      (let ((image-surface 
+	     (sdl:load-image (sprite-def-bmp-file sprite-def-1))))
+	(if (null image-surface)
+	    (error "failed to get a surface from the bmp ~a" image-surface))
+	(let ((surface (sdl:convert-surface
+			:surface image-surface
+			:key-color (sprite-def-background-colour sprite-def-1))))
+	  (if surface
 	      (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) surface)
-	      (format t "loaded ~a ptr ~a~%" (sprite-def-bmp-file sprite-def-1) (sdl:fp surface)))
-	  (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
+	      (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1))))))))
 
 (defun get-sprite-frame-with-index(frame-list index)
   "Given a list of frames return the one with index provided"
@@ -56,24 +60,34 @@
       (car frame-list)
     (get-sprite-frame(cdr frame-list) frame)))
 
+(defun get-sprite-frame-width-and-height(sprite-def sprite-frame)
+  "given a sprite definition and a frame number find the width 
+and height and return them as a a list"
+  (let ((frame (get-sprite-frame (sprite-def-frames sprite-def) sprite-frame)))
+    (values
+     (1+ (- (sprite-def-frame-x2 frame) (sprite-def-frame-x1 frame)))
+     (1+ (- (sprite-def-frame-y2 frame) (sprite-def-frame-y1 frame))))))
+  
+;(defun get-sprite-frame-width(sprite-def target-frame))
+  
 (defun draw-sprite(screen x y sprite-def target-frame)
   "Draw a sprite"
   (load-sprite-image sprite-def) ; ensure bmp is loaded (will only load once)
-  (let* ((surface (gethash (sprite-def-bmp-file sprite-def) *bmp-surfaces*))
-	 (frame (get-sprite-frame (sprite-def-frames sprite-def) target-frame))
-	 (sw (1+ (- (sprite-def-frame-x2 frame) (sprite-def-frame-x1 frame))))
-	 (sh (1+ (- (sprite-def-frame-y2 frame) (sprite-def-frame-y1 frame)))))
-    (if surface
-	(sdl-base::with-rectangles ((src-rect) (dst-rect))
-	  (setf (sdl-base::rect-x src-rect) (sprite-def-frame-x1 frame)
-		(sdl-base::rect-y src-rect) (sprite-def-frame-y1 frame)
-		(sdl-base::rect-w src-rect) sw
-		(sdl-base::rect-h src-rect) sh)
-	  (setf (sdl-base::rect-x dst-rect) x
-		(sdl-base::rect-y dst-rect) y)
-	  (sdl-base:blit-surface (sdl:fp surface) (sdl:fp screen)
-				 src-rect  dst-rect))
-	(error "no surface"))))
+  (let ((surface (gethash (sprite-def-bmp-file sprite-def) *bmp-surfaces*))
+	(frame (get-sprite-frame (sprite-def-frames sprite-def) target-frame)))
+    (multiple-value-bind (sw sh)
+	(get-sprite-frame-width-and-height sprite-def target-frame)
+      (if surface
+	  (sdl-base::with-rectangles ((src-rect) (dst-rect))
+	    (setf (sdl-base::rect-x src-rect) (floor (sprite-def-frame-x1 frame))
+		  (sdl-base::rect-y src-rect) (floor (sprite-def-frame-y1 frame))
+		  (sdl-base::rect-w src-rect) (floor sw)
+		  (sdl-base::rect-h src-rect) (floor sh)
+		  (sdl-base::rect-x dst-rect) (floor x)
+		  (sdl-base::rect-y dst-rect) (floor y))
+	    (sdl-base:blit-surface (sdl:fp surface) (sdl:fp screen)
+				   src-rect  dst-rect))
+	  (error "no surface")))))
 
 (defun get-frame-from-time-and-speed(num-frames speed time)
   "Given the number of frames in an animation and the speed, figure out which frame to be playing at a given time"

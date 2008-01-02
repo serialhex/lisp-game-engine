@@ -18,16 +18,22 @@
   (cq-add-back (list (slot-value object 'x) (slot-value object 'y)) (slot-value object 'trail))
   (call-next-method))
 
+(defun sx(x)
+  (integer-in-range x 0 640))
+
+(defun sy(y)
+  (integer-in-range y 0 480))
+
 (defmethod draw((object trail-physics-rectangle))
   "draw trail"
   (with-slots (trail color end-color) object
     (let ((ndx 0))
       (cq-iterate-pairs (pos1 pos2 trail)
-	(sdl:draw-line-* (first pos1) (second pos1) (first pos2) (second pos2) 
+	(sdl:draw-line-* (sx (first pos1)) (sy (second pos1))
+			 (sx (first pos2)) (sy (second pos2))
 			 :color (interp-sdl-color end-color color (/ ndx (circular-queue-count trail)))
 			 :surface sdl:*default-display*)
-	(incf ndx))))
-)
+	(incf ndx)))))
 ;  (call-next-method))
 
 

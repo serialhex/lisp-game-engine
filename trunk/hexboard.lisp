@@ -88,8 +88,8 @@
 			 (size 2)
 			 (val (hb-get-ring-index hb ring index)))
 		    (sdl:draw-box (sdl:rectangle 
-				   :x (+ cx x (/ size -2))
-				   :y (+ cy y (/ size -2))
+				   :x (round (+ cx x (/ size -2)))
+				   :y (round (+ cy y (/ size -2)))
 				   :w size :h size)
 				  :color color :surface sdl:*default-display*)))))
 

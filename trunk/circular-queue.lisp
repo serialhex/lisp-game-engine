@@ -1,4 +1,4 @@
-;;;; a simple circular queue
+;;;; Simple circular queue
 ;;;; can add items to the end 
 ;;;; can get the first guy (first in first out)
 ;;;; if it fills up you lose the guys at the front if you add more
