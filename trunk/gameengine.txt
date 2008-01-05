@@ -12,6 +12,13 @@ Things to do
 
 VHIGH Pong prototype
 
+      ???
+
+      player 1 and 2
+      score
+
+      
+
 VHIGH Global objects
       Some way to have collision system run through all physics 
       components and process all collision
