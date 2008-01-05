@@ -19,6 +19,12 @@
   "Add an object to the game"
   (push obj *active-game-objects*))
 
+(defun find-object-with-name-in-active-list(name)
+  "find object with name"
+  (find (lambda (obj) (string-equal name (slot-value obj 'name)))
+	*active-game-objects*))
+
+
 (defun remove-object-with-name-from-active-list(name)
   "remove any objects with name"
   (setf *active-game-objects*

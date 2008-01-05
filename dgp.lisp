@@ -1,4 +1,4 @@
-;;;; An exploration of dynamic game programming in Common Lisp
+;;;; Component based dynamic game programming environment
 ; (C)2008 Justin Heyes-Jones
 
 (in-package :cl-user)  
@@ -49,15 +49,35 @@
 
 (defun make-left-pong-player()
   (let ((phys (make-instance '2d-physics
-			     :x 5.0 :y (screen-center-y)
-			     :ax 0.0 :ay 0.0
-			     :collide-type 'player))
+			     :collide-type 'player
+			     :x *paddle-left-offset*
+			     :y *paddle-start-y*))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def waddle-sprite :current-frame 'waddle-idle-1
 			     :speed 8.0)) ; frames per second
-	(pong (make-instance 'player-paddle-logic))
+	(pong (make-instance 'player-paddle-logic
+			     :control-type 'human-keyboard
+			     :side 'left))
 	(obj (make-instance 'composite-object
-			    :name "left player")))
+			    :name "human player 1")))
+    (add-component obj phys)
+    (add-component obj anim)
+    (add-component obj pong)
+    obj))
+
+(defun make-right-pong-player()
+  (let ((phys (make-instance '2d-physics
+			     :collide-type 'player
+			     :x *paddle-right-offset*
+			     :y *paddle-start-y*))
+	(anim (make-instance 'animated-sprite
+			     :sprite-def waddle-sprite :current-frame 'waddle-idle-1
+			     :speed 16.0)) ; frames per second
+	(pong (make-instance 'player-paddle-logic
+			     :control-type 'ai-hard
+			     :side 'right))
+	(obj (make-instance 'composite-object
+			    :name "hard ai player")))
     (add-component obj phys)
     (add-component obj anim)
     (add-component obj pong)
@@ -83,7 +103,8 @@
 (defun test()
   (engine-init)
   (add-object-to-active-list (make-left-pong-player))
-  (dotimes (n 20)
+  (add-object-to-active-list (make-right-pong-player))
+  (dotimes (n 3)
     (add-object-to-active-list (make-random-animated-dude))))
 
 (defun send-message-to-all-objects(message &rest args)
@@ -125,6 +146,10 @@
   (sdl:quit-sub-systems)
   (sdl:quit-sdl)
   (setf *engine-active* nil))
+
+#+lispworks 
+(defun engine-run-as-lisporks-new-process()
+  (mp:process-run-function "Game engine" '(:priority 42) #'engine-run))
 
 (defun engine-run()
   "The main game engine loop, it updates objects then draws them"
