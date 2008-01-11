@@ -43,17 +43,11 @@
 ; engine-run and engine-quit
 (defparameter *engine-active* nil)
 
-; TODO is this in lispbuilder, if not add
-(defun screen-center-x() (half *window-width*))
-(defun screen-center-y() (half *window-height*))
-
 (defun make-left-pong-player()
   (let ((phys (make-instance '2d-physics
-			     :collide-type 'player
-			     :x *paddle-left-offset*
-			     :y *paddle-start-y*))
+			     :collide-type 'paddle))
 	(anim (make-instance 'animated-sprite
-			     :sprite-def waddle-sprite :current-frame 'waddle-idle-1
+			     :sprite-def left-bat-sprite :current-frame 'frame-1
 			     :speed 8.0)) ; frames per second
 	(pong (make-instance 'player-paddle-logic
 			     :control-type 'human-keyboard
@@ -67,11 +61,9 @@
 
 (defun make-right-pong-player()
   (let ((phys (make-instance '2d-physics
-			     :collide-type 'player
-			     :x *paddle-right-offset*
-			     :y *paddle-start-y*))
+			     :collide-type 'paddle))
 	(anim (make-instance 'animated-sprite
-			     :sprite-def waddle-sprite :current-frame 'waddle-idle-1
+			     :sprite-def right-bat-sprite :current-frame 'frame-1
 			     :speed 16.0)) ; frames per second
 	(pong (make-instance 'player-paddle-logic
 			     :control-type 'ai-hard
@@ -83,29 +75,22 @@
     (add-component obj pong)
     obj))
 
-(defun make-random-animated-dude()
+(defun make-ball()
   (let ((phys (make-instance '2d-physics
 			     :x (random-range 0.0 640.0) :y (random-range 0.0 480.0) 
 			     :vx (random-range 4.0 10.0) :vy (random-range -8.0 8.0)
 			     :collide-type 'ball
-			     :collide-with-types '(player left-goal right-goal wall)))
+			     :collide-with-types '(paddle left-goal right-goal wall)))
 	(anim (make-instance 'animated-sprite
-			     :sprite-def waddle-sprite :current-frame 'waddle-idle-1
+			     :sprite-def ball-sprite :current-frame 'frame-1
 			     :speed 4.0))
 	(ball (make-instance 'ball-logic))
 	(obj (make-instance 'composite-object
-			    :name (format nil "animateddude_~a" (get-next-uid)))))
+			    :name "ball")))
     (add-component obj phys)
     (add-component obj anim)
     (add-component obj ball)
     obj))
-
-(defun test()
-  (engine-init)
-  (add-object-to-active-list (make-left-pong-player))
-  (add-object-to-active-list (make-right-pong-player))
-  (dotimes (n 3)
-    (add-object-to-active-list (make-random-animated-dude))))
 
 (defun send-message-to-all-objects(message &rest args)
   "Send the message to every component of every object"
@@ -188,4 +173,13 @@ Warning, this doesn't show the actual frame rate, but it probably should"
    (format nil "fps: ~a" (sdl:frame-rate))
    10 10 :color (sdl:color :r #xff :b #xff :g #xff)))
 
+; a simple test run
+; the data driven engine will look something like this
+; but with a nicer syntax for creating and adding objects
+(defun start-pong()
+  (engine-init)
+  (add-object-to-active-list (make-left-pong-player))
+  (add-object-to-active-list (make-right-pong-player))
+  (add-object-to-active-list (make-ball)))
 
+; (engine-run)
