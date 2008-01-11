@@ -21,8 +21,9 @@
 
 (defun find-object-with-name-in-active-list(name)
   "find object with name"
-  (find (lambda (obj) (string-equal name (slot-value obj 'name)))
-	*active-game-objects*))
+  (find-if 
+   (lambda (obj) (string-equal name (slot-value obj 'name))) 
+   *active-game-objects*))
 
 
 (defun remove-object-with-name-from-active-list(name)

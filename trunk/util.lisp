@@ -72,11 +72,6 @@
     (setf (sdl:b new-color) (* scale (sdl:b color)))
     new-color))
 
-(defun random-range(min max)
-  "Return a random number between min and max"
-  (let ((diff (abs (- min max))))
-    (+ min (random diff))))
-
 (defun half(x)
   "halve the value of x"
   (/ x 2))

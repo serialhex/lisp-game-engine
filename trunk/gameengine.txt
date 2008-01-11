@@ -12,11 +12,22 @@ Things to do
 
 VHIGH Pong prototype
 
-      ???
+      need to fix screen height, width etc 
+
+      need a logical play area for pong
+
+      the window needs to know what the camera offset is 
 
       player 1 and 2
-      score
 
+      ai
+X	needs to get ball trajectory 
+
+      scoring
+
+      game ending 
+
+      bonus mode, lots of balls.
       
 
 VHIGH Global objects
