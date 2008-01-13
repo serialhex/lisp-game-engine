@@ -60,7 +60,7 @@ locate it correctly horizontally"
   (with-slots (x width) physics
     (if (equal (slot-value paddle-logic 'side) 'left)
 	(setf x *paddle-side-offset*)
-	(setf x (- 640 (- *paddle-side-offset* width))))))
+	(setf x (- 640 1 width *paddle-side-offset*)))))
 
 (defmethod handle-message((comp player-paddle-logic) message-type &rest rest)  
   (let ((owner (slot-value comp 'owner)))
