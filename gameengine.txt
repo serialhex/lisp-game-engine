@@ -10,15 +10,19 @@ Notes on lisp game engine
 
 Things to do
 
+VHIGH Design for more than one level 
+
+
+
 VHIGH Pong prototype
 
-      need to fix screen height, width etc 
+      need to parameterise screen height, width etc
 
-      need a logical play area for pong
+      need a logical play area for pong (score and so on seperate)
 
       the window needs to know what the camera offset is 
 
-      player 1 and 2
+X      player 1 and 2
 
       ai
 X	needs to get ball trajectory 
@@ -30,27 +34,33 @@ X	needs to get ball trajectory
       bonus mode, lots of balls.
       
 
-VHIGH Global objects
+HIGH (performance related) Global objects
       Some way to have collision system run through all physics 
       components and process all collision
       Needs to be done outside of current update loop
 
-VHIGH Better way to send messages to everything (or rather not 
+HIGH Better way to send messages to everything (or rather not 
       send them to everything)
 
 HIGH Object factory
       Able to create instances of objects from a text or DSL spec
       Instances share data if possible
 
-HIGH Decent solution to state machine
+X HIGH Decent solution to state machine
+
+  State machine can be a component
+  It responds to the update message
+  Only difference being, what it does depends on state
+  It can either have explicit state changes within states
+  or you the usual data driven stuff
 
 HIGH More interactive programming capabilities
 
 X     split engine into init, run and quit
        run engine as a process in various capable cl's
-       need to do deffered adding and deleting of objects midframe though
+       need to do deferred adding and deleting of objects midframe though
 
-MED Drawing must be deferred so you can sort after the fact
+MED Drawing must be deferred so you can sort, do layers and so on
 
 	Draw instructions not operations
 
@@ -59,8 +69,6 @@ MED Drawing must be deferred so you can sort after the fact
 	Could be macro
 
 X HIGH component and message passing design
-
-
 
 Game component or high level object 
 
@@ -108,113 +116,6 @@ leave level
 
 Misc
 X	Make sure engine-init, run and quit cannot be used inappropriately
-
-##############################################
-Jottings....
-
-
-Data
-
-List of active Objects 
-
-     Each object has list of components 
-
-Update
-
-	For each object
-	    For each component
-	    	invoke current message (draw, update)
-     
-Also objects can send messages to each other during the update
-These messages can be deferred if need be
-
-Problem is I'd rather do something more like
-
-Update 
-
-       For each message type
-       	   For each component responding to this 
-       	       invoke message type on component
-
-To do that...
-
-Data
-
-	Components would need a list of messages they respond to
-	which is fine
-
-Update
-
-	Beginning of frame make lists of all objects responding to various
-	messages 
-
-Another problem is objects that manage all components, they don't really
-live anywhere yet (eg's: collide all objects at once, get key input and translate
-it to component messages)
-
-In the case of input I think it's fine to have it outside the system
-of objects and components and let the components access it ...
-
-Update 
-
-       Input:Update
-
-       UpdateObjects
-
-
-	.. in some component update 
-
-	   if(Input:key-space-bar)
-		fart
-
-		etc
-
-But collision is different. I need a collide message
-that is sent to the first physics object only, or some
-higher level object , and it must occur after the physics
-update.
-
-Idea 1
-
-     
-     update physics
-     	    
-	    gather physics components
-
-	    send physics 'move (instead of update)
-     	    call physics collide on list (not on component)
-
-That is not nice because it breaks the nice main loop
-
-Idea 2
-
-     Still seperate update ticks into something like
-
-     	   move, collide, think, draw
-	  
-     Main loop  
-
-     	  for each message '(move, collide ...)
-     	  find components that respond to that message
-	  invoke message on each component 
-
-     Then to solve the 'everybody needs to collide problem'
-     the collide message needs to be clever
-
-     eg: send a new frame message at beginning of frame
-     and a end frame at the end
-
-     collision system now is
-
-     	       'begin-frame 
-	       	     clear collision cache
-	       'move
-		     move the objects
-               'collide
-		     
-			
-                
-     	       
 
 ##############################################
 
