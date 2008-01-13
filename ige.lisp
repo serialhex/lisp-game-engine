@@ -25,71 +25,20 @@
 #-sbcl (defparameter *bmp-path* nil)
 
 ;;;; Totally generic systems
+;(load "gameobjects") ; generic game objects
 (load "util")
 (load "sprites") ; sprite drawing, animation and file handling
+;; todo need input system
 
-;;; A bit more game engine specific systems
-
-;(load "gameobjects") ; generic game objects
 (load "components")
 
 ;;;; Game specific data - eventually this should be elsewhere
 
-(load "spritedefs1") ; sample sprite definitions
 (load "pong") ; components and code for being a pong game
 
 ; this variable ensures proper use of engine-init
 ; engine-run and engine-quit
 (defparameter *engine-active* nil)
-
-(defun make-left-pong-player()
-  (let ((phys (make-instance '2d-physics
-			     :collide-type 'paddle))
-	(anim (make-instance 'animated-sprite
-			     :sprite-def left-bat-sprite :current-frame 'frame-1
-			     :speed 8.0)) ; frames per second
-	(pong (make-instance 'player-paddle-logic
-			     :control-type 'human-keyboard
-			     :side 'left))
-	(obj (make-instance 'composite-object
-			    :name "human player 1")))
-    (add-component obj phys)
-    (add-component obj anim)
-    (add-component obj pong)
-    obj))
-
-(defun make-right-pong-player()
-  (let ((phys (make-instance '2d-physics
-			     :collide-type 'paddle))
-	(anim (make-instance 'animated-sprite
-			     :sprite-def right-bat-sprite :current-frame 'frame-1
-			     :speed 16.0)) ; frames per second
-	(pong (make-instance 'player-paddle-logic
-			     :control-type 'ai-hard
-			     :side 'right))
-	(obj (make-instance 'composite-object
-			    :name "hard ai player")))
-    (add-component obj phys)
-    (add-component obj anim)
-    (add-component obj pong)
-    obj))
-
-(defun make-ball()
-  (let ((phys (make-instance '2d-physics
-			     :x (random-range 0.0 640.0) :y (random-range 0.0 480.0) 
-			     :vx (random-range 4.0 10.0) :vy (random-range -8.0 8.0)
-			     :collide-type 'ball
-			     :collide-with-types '(paddle left-goal right-goal wall)))
-	(anim (make-instance 'animated-sprite
-			     :sprite-def ball-sprite :current-frame 'frame-1
-			     :speed 4.0))
-	(ball (make-instance 'ball-logic))
-	(obj (make-instance 'composite-object
-			    :name "ball")))
-    (add-component obj phys)
-    (add-component obj anim)
-    (add-component obj ball)
-    obj))
 
 (defun send-message-to-all-objects(message &rest args)
   "Send the message to every component of every object"
@@ -141,6 +90,7 @@
       (error "engine-init was not called"))
   (sdl:with-events  ()
     (:quit-event () t)
+    ; todo replace this with a simple input system
     (:key-down-event (:key key)
 		     (cond
 		       ((sdl:key= key :SDL-KEY-ESCAPE)
@@ -169,16 +119,10 @@
   "Show the current desired framerate
 Warning, this doesn't show the actual frame rate, but it probably should"
   (sdl:draw-string-solid-* 
-   (format nil "fps: ~a" (sdl:frame-rate))
-   10 10 :color (sdl:color :r #xff :b #xff :g #xff)))
+   (format nil "fps: ~a" (coerce (sdl:average-fps) 'single-float))
+   300 10 
+   :justify :center
+   :color (sdl:color :r #xff :g #xff :b #xff)))
 
-; a simple test run
-; the data driven engine will look something like this
-; but with a nicer syntax for creating and adding objects
-(defun start-pong()
-  (engine-init)
-  (add-object-to-active-list (make-left-pong-player))
-  (add-object-to-active-list (make-right-pong-player))
-  (add-object-to-active-list (make-ball)))
+   
 
-; (engine-run)
