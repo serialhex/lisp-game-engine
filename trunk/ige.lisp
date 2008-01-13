@@ -1,4 +1,4 @@
-;;;; Component based dynamic game programming environment
+;;;; A component based, data driven, interactive game engine
 ; (C)2008 Justin Heyes-Jones
 
 (in-package :cl-user)  
@@ -33,8 +33,7 @@
 ;(load "gameobjects") ; generic game objects
 (load "components")
 
-;;;; Game specific data - eventually dgp should be just the
-;;;; engine with no idea what kind of game it is
+;;;; Game specific data - eventually this should be elsewhere
 
 (load "spritedefs1") ; sample sprite definitions
 (load "pong") ; components and code for being a pong game
