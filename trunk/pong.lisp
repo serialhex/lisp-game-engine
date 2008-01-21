@@ -80,10 +80,12 @@ locate it correctly horizontally"
 	   ('human-keyboard
              ; basic input 
 	    (setf (slot-value phys 'vy) 0.0)
-	    (when *player-1-key-up-held* 
-	      (setf (slot-value phys 'vy) (* -1 *player-paddle-speed*)))
-	    (when *player-1-key-down-held* 
-	      (setf (slot-value phys 'vy) *player-paddle-speed*)))
+	    (when (input:key-held-p :SDL-KEY-UP)
+	      (setf (slot-value phys 'vy) 
+		    (* -1.0 *player-paddle-speed* (+ 0.75 (input:key-held-time :SDL-KEY-UP)))))
+	    (when (input:key-held-p :SDL-KEY-DOWN)
+	      (setf (slot-value phys 'vy) 
+		    (* 1.0 *player-paddle-speed* (+ 0.75 (input:key-held-time :SDL-KEY-DOWN))))))
 	   (otherwise
 	    (error "~a is not a known control type for player-paddle-logic component"))))))))
 
