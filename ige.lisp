@@ -13,12 +13,6 @@
 (defparameter *FULL-SCREEN-P* nil)
 (defparameter *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44))
 
-;;;; temp - this is global data for now that will be part of the input 
-;;;; input system, or the message system
-
-(defparameter *player-1-key-up-held* nil)
-(defparameter *player-1-key-down-held* nil)
-
 ;;; This should be platform independent somehow
 ;;; for now this will work for me
 #+sbcl (defparameter *bmp-path* "/home/justinhj/lisp-game-engine/")
@@ -28,7 +22,7 @@
 ;(load "gameobjects") ; generic game objects
 (load "util")
 (load "sprites") ; sprite drawing, animation and file handling
-;; todo need input system
+(load "input") ; joystick, mouse and keyboard
 
 (load "components")
 
@@ -45,7 +39,7 @@
   (dolist (obj *active-game-objects*)
     (dolist (comp (slot-value obj 'components))
       (apply #'handle-message comp message args))))
-  
+
 ;;;; need to use with- pattern here...
 ;;;; todo also move to components
 ;;;; eg: (defun update-components(message &rest rest)
@@ -68,6 +62,7 @@
   ;;; init other stuff we want available
   (sdl:initialise-default-font)
   (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
+  (input:initialise)
   (setf *engine-active* t))
 
 (defun engine-quit()
@@ -76,6 +71,7 @@
       (error "engine-init was not called"))
   (sprites:flush-image-cache)
   (setf *active-game-objects* nil) ; free all game objects to the garbage collector
+  (input:quit)
   (sdl:quit-sub-systems)
   (sdl:quit-sdl)
   (setf *engine-active* nil))
@@ -92,19 +88,11 @@
     (:quit-event () t)
     ; todo replace this with a simple input system
     (:key-down-event (:key key)
-		     (cond
-		       ((sdl:key= key :SDL-KEY-ESCAPE)
-			(sdl:push-quit-event))
-		       ((sdl:key= key :SDL-KEY-UP)
-			(setf *player-1-key-up-held* t))
-		       ((sdl:key= key :SDL-KEY-DOWN)
-			(setf *player-1-key-down-held* t))))
+		     (input:handle-key-down key)
+		     (if (sdl:key= key :SDL-KEY-ESCAPE)
+			 (sdl:push-quit-event)))
     (:key-up-event (:key key)
-		     (cond
-		       ((sdl:key= key :SDL-KEY-UP)
-			(setf *player-1-key-up-held* nil))
-		       ((sdl:key= key :SDL-KEY-DOWN)
-			(setf *player-1-key-down-held* nil))))
+		     (input:handle-key-up key))
     (:idle () ;; redraw screen on idle
 	   ;; fill the background
 	   (sdl:clear-display *BG-COLOR*)
@@ -113,13 +101,14 @@
 	   (draw-game-objects)
 	   (show-frame-rate) ; todo could be component
 	   ;; Update the whole screen 
-	   (sdl:update-display))))
+	   (sdl:update-display)
+	   (input:update (/ 1.0 (sdl:frame-rate))))))
     
 (defun show-frame-rate()
   "Show the current desired framerate
 Warning, this doesn't show the actual frame rate, but it probably should"
   (sdl:draw-string-solid-* 
-   (format nil "fps: ~a" (coerce (sdl:average-fps) 'single-float))
+   (format nil "fps: ~2$" (coerce (sdl:average-fps) 'single-float))
    300 10 
    :justify :center
    :color (sdl:color :r #xff :g #xff :b #xff)))
