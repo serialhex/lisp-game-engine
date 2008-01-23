@@ -1,4 +1,4 @@
-;;; SDL Drawing and low level data management for colour keyed sprites
+;;;; SDL Drawing, file operations and animation for images
 
 (defpackage :sprites
   (:use #:cl #:lispbuilder-sdl)
@@ -9,7 +9,8 @@
    #:get-sprite-frame-with-index
    #:get-frame-from-time-and-speed
    #:time-per-frame
-   #:get-sprite-frame-width-and-height))
+   #:get-sprite-frame-width-and-height
+   #:sprite-def-frames))
 
 (in-package :sprites)
 

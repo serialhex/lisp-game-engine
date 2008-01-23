@@ -25,7 +25,6 @@
    (lambda (obj) (string-equal name (slot-value obj 'name))) 
    *active-game-objects*))
 
-
 (defun remove-object-with-name-from-active-list(name)
   "remove any objects with name"
   (setf *active-game-objects*
@@ -71,6 +70,7 @@
 
 ;;;; TODO add rotational velocity and
 ;;;; acceleration here when needed
+;;;; and different collision responses
 (defclass 2d-physics (component)
   ((x :initform 0.0 :initarg :x)
    (y :initform 0.0 :initarg :y)
@@ -184,11 +184,11 @@
 	       (current-frame speed time-playing sprite-def) 
 	     comp
 	   (incf time-playing time-elapsed)
-	   (let* ((num-frames (length (sprites::sprite-def-frames sprite-def)))
+	   (let* ((num-frames (length (sprites:sprite-def-frames sprite-def)))
 		  (frame-num (sprites:get-frame-from-time-and-speed num-frames speed time-playing)))
 	     (setf current-frame
 		   (sprites:get-sprite-frame-with-index 
-		    (sprites::sprite-def-frames sprite-def) frame-num)))
+		    (sprites:sprite-def-frames sprite-def) frame-num)))
 	   ;; now inform the physics object of our dimensions based on the sprite
 	   (multiple-value-bind (spr-width spr-height)
 	       (sprites:get-sprite-frame-width-and-height sprite-def current-frame)
