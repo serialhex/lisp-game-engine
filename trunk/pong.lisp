@@ -4,7 +4,7 @@
 
 ;; some data for pong 
 
-(defparameter *paddle-side-offset* 30.0)
+(defparameter *paddle-side-offset* 50.0)
 
 ;(defparameter *paddle-hoz-offset* 30.0)
 ;(defparameter *paddle-left-offset* *paddle-hoz-offset*)
@@ -115,7 +115,7 @@ locate it correctly horizontally"
 		   (setf vx (abs vx))
 		   (setf vx (* -1 (abs vx)))))))))))
 
-       (defun make-left-pong-player()
+(defun make-left-pong-player()
   (let ((phys (make-instance '2d-physics
 			     :collide-type 'paddle))
 	(anim (make-instance 'animated-sprite
@@ -129,6 +129,15 @@ locate it correctly horizontally"
     (add-component obj phys)
     (add-component obj anim)
     (add-component obj pong)
+    obj))
+
+(defun make-text-object(string x y justification)
+  (let ((phys (make-instance '2d-physics :x x :y y))
+	(text (make-instance 'text :justification justification :string string))
+	(obj (make-instance 'composite-object
+			    :name "text object 1")))
+    (add-component obj phys)
+    (add-component obj text)
     obj))
 
 (defun make-right-pong-player()
@@ -172,4 +181,7 @@ locate it correctly horizontally"
   (engine-init)
   (add-object-to-active-list (make-left-pong-player))
   (add-object-to-active-list (make-right-pong-player))
-  (add-object-to-active-list (make-ball)))
+  (add-object-to-active-list (make-ball))
+  (add-object-to-active-list (make-text-object "Pong ..." 20 200 :left))
+  (add-object-to-active-list (make-text-object "... rocks" 620 200 :right)))
+

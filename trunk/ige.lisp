@@ -99,7 +99,7 @@
 	   ;; Do stuff
 	   (update-game-objects)
 	   (draw-game-objects)
-	   (show-frame-rate) ; todo could be component
+	   ;(show-frame-rate) ; todo could be component
 	   ;; Update the whole screen 
 	   (sdl:update-display)
 	   (input:update (/ 1.0 (sdl:frame-rate))))))

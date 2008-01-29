@@ -120,10 +120,31 @@ X	Make sure engine-init, run and quit cannot be used inappropriately
 ##############################################
 
 
+                
+game
+
+  list of levels
+
+  list of objects in world
+
+  function goto level
+  	   finds a level by name or perhaps index
+	   calls level-end on current level
+	   calls level-begin on new level
 
 
+level - is a class providing the following
 
+	level-begin
+		in which you create objects and add them to the world
+		you could also take objects in the current list and do stuff with them
 
-
-
+	level-update t
+		which is called with frame delta time 't'
+		in which you can do whatever you want 
+		
+		
+	level-end
+		in which you remove objects from the world that you are sure the next level
+		will not want
 
