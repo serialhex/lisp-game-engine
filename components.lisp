@@ -50,9 +50,13 @@
 (defmethod handle-message((comp component) message-type &rest rest)
 ())
 
+; note: should this be generic? it only really has this behaviour
+; note: this returns an obj because thats useful to me at a point in 
+; the code but probably not a great reason
 (defmethod add-component((obj composite-object) (comp component))
   (setf (slot-value comp 'owner) obj)
-  (push comp (slot-value obj 'components)))
+  (push comp (slot-value obj 'components))
+  obj)
 
 ;;; Functions for locating components by name, type and so on
 
@@ -82,6 +86,7 @@
    (height :initform 1.0 :initarg :height)
    (collide-type :initform 'no-collision :initarg :collide-type)
    (collide-with-types :initform nil :initarg :collide-with-types)
+   (collision-response :initform nil :initarg :collision-response)
    (collision-list :initform nil)))
 
 ;;;; Use this to view collision rectangles 
@@ -227,5 +232,25 @@
        nil))))
 
    
+;;;; add this component to a text object to show the frame rate 
+
+(defclass frame-rate-to-text(component)
+  ())
+
+(defmethod handle-message((comp frame-rate-to-text) message-type &rest rest)
+  (let ((owner (slot-value comp 'owner)))
+    (case message-type 
+      ('update
+	 (let ((text-comp (find-component-with-type owner 'text)))
+	   (with-slots (string) text-comp 
+	     (setf string (format nil "fps: ~2$" (coerce (sdl:average-fps) 'single-float))))))))) 
+       
+
+
+
+
+
+
+
 
 

@@ -183,5 +183,9 @@ locate it correctly horizontally"
   (add-object-to-active-list (make-right-pong-player))
   (add-object-to-active-list (make-ball))
   (add-object-to-active-list (make-text-object "Pong ..." 20 200 :left))
-  (add-object-to-active-list (make-text-object "... rocks" 620 200 :right)))
+  (add-object-to-active-list (make-text-object "... rocks" 620 200 :right))
+  (add-object-to-active-list
+   (add-component 
+    (make-text-object "fps" 300 10 :center)
+    (make-instance 'frame-rate-to-text))))
 
