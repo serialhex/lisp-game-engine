@@ -13,42 +13,29 @@
 (defparameter *FULL-SCREEN-P* nil)
 (defparameter *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44))
 
+;;; TODO fix
 ;;; This should be platform independent somehow
 ;;; for now this will work for me
 #+sbcl (defparameter *bmp-path* "/home/justinhj/lisp-game-engine/")
 #-sbcl (defparameter *bmp-path* nil)
 
-;;;; Totally generic systems
-;(load "gameobjects") ; generic game objects
+;;;; Game/Media systems - all games can use these
 (load "util")
 (load "sprites") ; sprite drawing, animation and file handling
 (load "input") ; joystick, mouse and keyboard
 
-(load "components")
+(load "components") ; generic components and objects
+(load "game") ; game and level management
 
 ;;;; Game specific data - eventually this should be elsewhere
 
 (load "pong") ; components and code for being a pong game
 
-; this variable ensures proper use of engine-init
-; engine-run and engine-quit
-(defparameter *engine-active* nil)
+(defparameter *engine-game* nil
+  "Current game which is the levels, game specific data and objects")
 
-(defun send-message-to-all-objects(message &rest args)
-  "Send the message to every component of every object"
-  (dolist (obj *active-game-objects*)
-    (dolist (comp (slot-value obj 'components))
-      (apply #'handle-message comp message args))))
-
-;;;; need to use with- pattern here...
-;;;; todo also move to components
-;;;; eg: (defun update-components(message &rest rest)
-(defun update-game-objects()
-  (send-message-to-all-objects 'update (/ 1.0 (sdl:frame-rate))))
-
-(defun draw-game-objects()
-  (send-message-to-all-objects 'collide)
-  (send-message-to-all-objects 'draw))
+(defparameter *engine-active* nil 
+  "Monitors the status of the engine to ensure init and quit correct use")
 
 (defun engine-init()
   "sets up the game engine and returns"
@@ -58,7 +45,8 @@
   (sdl:init-sub-systems)
   (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
   ;;; TODO handle full screen here
-  (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* :title-caption "Game engine" :icon-caption "Game engine")
+  (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* 
+	      :title-caption "Game engine" :icon-caption "Game engine")
   ;;; init other stuff we want available
   (sdl:initialise-default-font)
   (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
@@ -70,12 +58,13 @@
   (if (null *engine-active*)
       (error "engine-init was not called"))
   (sprites:flush-image-cache)
-  (setf *active-game-objects* nil) ; free all game objects to the garbage collector
   (input:quit)
   (sdl:quit-sub-systems)
   (sdl:quit-sdl)
   (setf *engine-active* nil))
 
+; Note this works in lispworks, kinda, you can run the main loop in a seperate 
+; process
 #+lispworks 
 (defun engine-run-as-lisporks-new-process()
   (mp:process-run-function "Game engine" '(:priority 42) #'engine-run))
@@ -96,22 +85,18 @@
     (:idle () ;; redraw screen on idle
 	   ;; fill the background
 	   (sdl:clear-display *BG-COLOR*)
-	   ;; Do stuff
-	   (update-game-objects)
-	   (draw-game-objects)
-	   ;(show-frame-rate) ; todo could be component
-	   ;; Update the whole screen 
+	   (engine-update-game)
 	   (sdl:update-display)
 	   (input:update (/ 1.0 (sdl:frame-rate))))))
-    
-(defun show-frame-rate()
-  "Show the current desired framerate
-Warning, this doesn't show the actual frame rate, but it probably should"
-  (sdl:draw-string-solid-* 
-   (format nil "fps: ~2$" (coerce (sdl:average-fps) 'single-float))
-   300 10 
-   :justify :center
-   :color (sdl:color :r #xff :g #xff :b #xff)))
+  
+(defun engine-set-game(game)
+  "Current game the engine is running"
+  (setf *engine-game* game))
+
+(defun engine-update-game()
+  "Update the current game"
+  (game-update *engine-game*))
+
 
    
 
