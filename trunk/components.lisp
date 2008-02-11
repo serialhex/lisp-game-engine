@@ -10,35 +10,36 @@
   ((name :initform (format nil "anon_~4,'0D" (get-next-uid)) :initarg :name)
    (components :initform nil :initarg :components)))
 
-; a list of game objects
-; everything that makes up the game must be a game object
-(defparameter *active-game-objects* nil)
-; true when the engine has been init'd but not quit'd
+(defun send-message-to-all-objects(objects message &rest args)
+  "Send the message to every component of every object"
+  (dolist (obj objects)
+    (dolist (comp (slot-value obj 'components))
+      (apply #'handle-message comp message args))))
 
-(defun add-object-to-active-list(obj)
-  "Add an object to the game"
-  (push obj *active-game-objects*))
+(defun add-object(objects obj)
+  "Add an object to the object list"
+  (push obj objects))
 
-(defun find-object-with-name-in-active-list(name)
+(defun find-object-with-name(objects name)
   "find object with name"
   (find-if 
    (lambda (obj) (string-equal name (slot-value obj 'name))) 
-   *active-game-objects*))
+   objects))
 
-(defun remove-object-with-name-from-active-list(name)
+(defun remove-object-with-name(objects name)
   "remove any objects with name"
-  (setf *active-game-objects*
+  (setf objects
 	(remove-if 
 	 (lambda (obj) (string-equal name (slot-value obj 'name)))
-	 *active-game-objects*)))
+	 objects)))
 
-(defun debug-view-active-object-names()
-  (dolist (obj *active-game-objects*) 
+(defun debug-view-object-names(objects)
+  (dolist (obj objects) 
     (format t "name ~a~%" (slot-value obj 'name))))
 
-(defun get-components-of-type-from-active-list(type)
+(defun get-components-of-type(objects type)
   (let ((found-components nil))
-    (dolist (obj *active-game-objects*)
+    (dolist (obj objects              )
       (dolist (comp (slot-value obj 'components))
 	(if (equal type (type-of comp))
 	    (setf found-components (cons comp found-components)))))
