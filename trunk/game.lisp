@@ -10,14 +10,17 @@
    (current-level :initform nil :initarg :current-level)
    (levels :initform (make-hash-table :test #'equal))
    (requested-level :initform nil :initarg :requested-level)
-   (active-objects :initform nil :initarg :active-objects))
+   (active-objects :initform nil :initarg :active-objects)
+   (start-level :initform nil :initarg :current-level))
   (:documentation "Game manages a set of levels and a list of active objects"))
 
-(defun game-add-level(game level)
+(defun game-add-level(game level &optional (start-level-p nil))
   "Add a level to the game hashed by name"
   (let ((levels (slot-value game 'levels))
 	(level-name (slot-value level 'name)))
-    (setf (gethash level-name levels) level)))
+    (setf (gethash level-name levels) level))
+  (if start-level-p
+      (setf (slot-value game 'start-level) level)))
 
 (defun game-change-level(game)
   "Set the game active-objects to be the ones in the new level."
@@ -29,8 +32,14 @@
  "Update game. Manages level changes and updates the active list of objects.
 I may make this a method and ensure that this is called but let the user code
 do game specific update"
- (if game
-     (with-slots '(requested-level levels current-level active-objects) game
+ (when game
+   (with-slots '(current-level requested-level start-level) game
+     (if (null current-level)
+	 (setf requested-level start-level)))))
+
+
+
+
        (unless (equal current-level requested-level)
 	 (game-change-level game))
        ; Send the user define messages and arguments for each update
@@ -38,6 +47,15 @@ do game specific update"
        (send-message-to-all-objects active-objects 'update (/ 1.0 (sdl:frame-rate)))
        (send-message-to-all-objects active-objects 'collide)
        (send-message-to-all-objects active-objects 'draw))))
+
+(defun game-update(game)
+ "Update game. Manages level changes and updates the active list of objects.
+I may make this a method and ensure that this is called but let the user code
+do game specific update"
+ (with-slots '(start-level) game
+   (describe start-level)))
+     (describe start-level))))
+
 
 (defun game-request-level(game level-name)
   "Ask the game to change levels next update"

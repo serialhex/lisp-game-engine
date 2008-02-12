@@ -176,19 +176,20 @@ locate it correctly horizontally"
 
 (defun start-pong()
   "create the objects for the game and start it up"
-  (let ((game (make-instance 'game :name "Ping"))
-	(level1 (make-instance 'level :name "Level 1")))
-    (with-slots '(objects) level1
-      (add-object objects (make-left-pong-player))
-      (add-object objects (make-right-pong-player))
-      (add-object objects (make-ball))
-      (add-object objects (make-text-object "Pong ..." 20 200 :left))
-      (add-object objects (make-text-object "... rocks" 620 200 :right))
-      (add-object objects 
-		  (add-component 
-		   (make-text-object "fps" 300 10 :center)
-		   (make-instance 'frame-rate-to-text))))
-    (game-add-level game level1)))
+  (let* ((game (make-instance 'game :name "Ping"))
+	 (level1 (make-instance 'level :name "Level 1"))
+	 (objects (slot-value level1 'objects)))
+    (add-object objects (make-left-pong-player))
+    (add-object objects (make-right-pong-player))
+    (add-object objects (make-ball))
+    (add-object objects (make-text-object "Ping ..." 20 200 :left))
+    (add-object objects (make-text-object "... rocks" 620 200 :right))
+    (add-object objects 
+		(add-component 
+		 (make-text-object "fps" 300 10 :center)
+		 (make-instance 'frame-rate-to-text)))
+    (game-add-level game level1 t)
+    (engine-set-game game)))
 
 
 
