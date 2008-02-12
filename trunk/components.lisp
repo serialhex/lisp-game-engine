@@ -16,10 +16,6 @@
     (dolist (comp (slot-value obj 'components))
       (apply #'handle-message comp message args))))
 
-(defun add-object(objects obj)
-  "Add an object to the object list"
-  (push obj objects))
-
 (defun find-object-with-name(objects name)
   "find object with name"
   (find-if 
@@ -112,7 +108,7 @@
   ; only collide if we have some types to collide with
   (if (slot-value comp 'collide-with-types)
       (let ((candidates 
-	     (get-components-of-type-from-active-list '2d-physics)))
+	     (game-get-components-of-type '2d-physics)))
 
 	; filter the list to include only valid types
 	(let ((filtered-candidates

@@ -88,6 +88,9 @@
 	   (engine-update-game)
 	   (sdl:update-display)
 	   (input:update (/ 1.0 (sdl:frame-rate))))))
+
+(defun engine-get-game()
+  *engine-game*)
   
 (defun engine-set-game(game)
   "Current game the engine is running"
