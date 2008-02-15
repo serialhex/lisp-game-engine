@@ -10,22 +10,26 @@ Notes on lisp game engine
 
 Things to do
 
-VHIGH Design for more than one level 
+VHIGH remove the parameter from 'update event. The game will be able
+to specify a list of messages that are sent every frame, but these
+will not have arguments. The only useful argument is frame delta, and
+that is globally available.
 
+This lets me do the game update as a list of message types.
 
-
-VHIGH Pong prototype
+VHIGH WIP Pong prototype
 
       need to parameterise screen height, width etc
 
       need a logical play area for pong (score and so on seperate)
 
-      the window needs to know what the camera offset is 
+            the window needs to know what the camera offset is 
 
 X      player 1 and 2
 
-      ai
+X      ai
 X	needs to get ball trajectory 
+MED       bug
 
       scoring
 
@@ -33,11 +37,14 @@ X	needs to get ball trajectory
 
       bonus mode, lots of balls.
       
+X Design for more than one level 
 
-HIGH (performance related) Global objects
+HIGH (performance related) Global object list
       Some way to have collision system run through all physics 
       components and process all collision
       Needs to be done outside of current update loop
+
+possibly collapse these two
 
 HIGH Better way to send messages to everything (or rather not 
       send them to everything)
@@ -48,11 +55,7 @@ HIGH Object factory
 
 X HIGH Decent solution to state machine
 
-  State machine can be a component
-  It responds to the update message
-  Only difference being, what it does depends on state
-  It can either have explicit state changes within states
-  or you the usual data driven stuff
+  This is just a component with a state symbol surely.
 
 HIGH More interactive programming capabilities
 
@@ -68,33 +71,21 @@ MED Drawing must be deferred so you can sort, do layers and so on
 
 	Could be macro
 
-X HIGH component and message passing design
+X component and message passing design
 
-Game component or high level object 
+X Game component or high level object 
 
-	Has the active object list
-	Objects can be active for update and draw
+	x Has the active object list
+	x Objects can be active for update and draw
 
-Level
+X Level
 
-	Need a level class that can
+x	     Store objects
+x	     Insert them to the active object list
+HIGH	     Reset them to beginning values
+x	     Remove its objects from the active list
+HIGH	     Persist some objects to the next level
 
-	     Store objects
-	     Insert them to the active object list
-	     Reset them to beginning values
-	     Remove its objects from the active list
-
-Animation
-
-	Need to be able to change the animation an object is doing
-	(Can do this by changing the sprite def in the animation
-	component)
-
-Message system
-
-	Objects need to be able to send messages to
-
-		specific objects by name
 X		objects that are listening for this type
 
 Physics
