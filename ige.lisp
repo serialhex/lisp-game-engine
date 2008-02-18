@@ -10,14 +10,11 @@
 ; on reloads if you wanted that behaviour instead.
 (defparameter *WINDOW-WIDTH* 640)
 (defparameter *WINDOW-HEIGHT* 480)
-(defparameter *FULL-SCREEN-P* nil)
+(defparameter *FULL-SCREEN-P* nil) ; unused
 (defparameter *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44))
 
-;;; TODO fix
-;;; This should be platform independent somehow
-;;; for now this will work for me
-#+sbcl (defparameter *bmp-path* "/home/justinhj/lisp-game-engine/")
-#-sbcl (defparameter *bmp-path* nil)
+; Set the default bitmap path
+(defparameter *bmp-path* nil)
 
 ;;;; Game/Media systems - all games can use these
 (load "util")
