@@ -174,22 +174,39 @@ locate it correctly horizontally"
     obj))
 
 
-(defun start-pong()
-  "create the objects for the game and start it up"
-  (let ((game (make-instance 'game :name "Ping"))
-	(level1 (make-instance 'level :name "Level 1"))
-	(level2 (make-instance 'level :name "Main menu")))
-    (level-add-object level1 (make-left-pong-player))
-    (level-add-object level1 (make-right-pong-player))
-    (level-add-object level1 (make-ball))
-    (level-add-object level1 
+(defun create-title-level()
+  "creates title screeen"
+  (let ((level (make-instance 'level :name "title")))
+    (level-add-object level (make-text-object "Ping ..." 20 200 :left))
+    (level-add-object level (make-text-object "... rocks" 620 200 :right))
+    level))
+
+(defun create-player-select()
+  "creates player select screen"
+  (let ((level (make-instance 'level :name "player select")))
+    (level-add-object level (make-text-object "Choose number of players" 320 200 :center))
+    (level-add-object level (make-text-object "And/Or Ai level" 320 300 :center))
+    level))
+
+
+(defun create-gameplay-level()
+  "creates the pong gameplay level"
+  (let ((level (make-instance 'level :name "gameplay")))
+    (level-add-object level (make-left-pong-player))
+    (level-add-object level (make-right-pong-player))
+    (level-add-object level (make-ball))
+    (level-add-object level 
 		      (add-component 
 		       (make-text-object "fps" 300 10 :center)
 		       (make-instance 'frame-rate-to-text)))
-    (level-add-object level2 (make-text-object "Ping ..." 20 200 :left))
-    (level-add-object level2 (make-text-object "... rocks" 620 200 :right))
-    (game-add-level game level1)
-    (game-add-level game level2 t)
+    level))
+
+(defun create-pong()
+  "create the objects for the game and start it up"
+  (let ((game (make-instance 'game :name "Ping")))
+    (game-add-level game (create-player-select) t)
+    (game-add-level game (create-gameplay-level))
+    (game-add-level game (create-title-level))
     (engine-set-game game)))
 
 
