@@ -43,7 +43,7 @@
 		 (key-status-time status) (key-status-prev-time status)))))
 
 (defun update(time)
-  ;(debug-view-keys)
+;  (debug-view-keys)
   (loop for key-status being the hash-values of *key-status-table* do
        (incf (key-status-time key-status) time)))
 
@@ -78,7 +78,7 @@
 (defun key-pressed-p(key)
   (let ((status (gethash key *key-status-table*)))
     (if (and (key-status-p status)
-	     (equ (key-status-status status) 'pressed)
+	     (eq (key-status-status status) 'pressed)
 	     (= 0.0 (key-status-time status)))
 	t
 	nil)))
