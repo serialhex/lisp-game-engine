@@ -89,6 +89,20 @@ locate it correctly horizontally"
 	   (otherwise
 	    (error "~a is not a known control type for player-paddle-logic component"))))))))
 
+;;;; GUI 
+; first stab at gui buttons
+(defclass gui-button-press-logic(component)
+  ((key-to-press :initform nil :initarg :key-to-press)
+   (action :initform nil :initarg :action)))
+
+(defmethod handle-message((comp gui-button-press-logic) message-type &rest rest)  
+  (with-slots (key-to-press action) comp
+    (case message-type 
+      ('update
+       (if key-to-press
+	   (when (input:key-pressed-p key-to-press)
+	     (format t "arse~%")))))))
+
 ;;;; This is the component that manages the ball
 
 (defclass ball-logic(component)

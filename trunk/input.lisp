@@ -74,3 +74,15 @@
     (if (key-status-p status)
 	(key-status-time status)
 	0.0)))
+
+(defun key-pressed-p(key)
+  (let ((status (gethash key *key-status-table*)))
+    (if (and (key-status-p status)
+	     (equ (key-status-status status) 'pressed)
+	     (= 0.0 (key-status-time status)))
+	t
+	nil)))
+
+
+	
+	     
