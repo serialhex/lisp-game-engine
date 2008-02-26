@@ -8,7 +8,7 @@ Notes on lisp game engine
 
 ##############################################
 
-Things to do
+TODO
 
 VHIGH remove the parameter from 'update event. The game will be able
 to specify a list of messages that are sent every frame, but these
@@ -35,6 +35,9 @@ MED       bug
 
       game ending 
 
+WIP      game menu - choose players and AI 
+   
+
       bonus mode, lots of balls.
       
 X Design for more than one level 
@@ -49,7 +52,7 @@ possibly collapse these two
 HIGH Better way to send messages to everything (or rather not 
       send them to everything)
 
-HIGH Object factory
+MED Object factory
       Able to create instances of objects from a text or DSL spec
       Instances share data if possible
 
@@ -93,49 +96,9 @@ Physics
 	Detect collisions (need world representation)
 	message to colliding objects
 
-Keyboard and joystick needs to get captured and relayed to objects
 
-	 Or just let player component do it?
-	 That's ok as long as you can abstract the 
-	 keys so it's configurable
+DONE
 
-GAME			LEVEL
+Input system - key timing (time held and so on. key pressed)
 
-enter level		has list of game objects
-leave level		
-
-
-Misc
-X	Make sure engine-init, run and quit cannot be used inappropriately
-
-##############################################
-
-
-                
-game
-
-  list of levels
-
-  list of objects in world
-
-  function goto level
-  	   finds a level by name or perhaps index
-	   calls level-end on current level
-	   calls level-begin on new level
-
-
-level - is a class providing the following
-
-	level-begin
-		in which you create objects and add them to the world
-		you could also take objects in the current list and do stuff with them
-
-	level-update t
-		which is called with frame delta time 't'
-		in which you can do whatever you want 
-		
-		
-	level-end
-		in which you remove objects from the world that you are sure the next level
-		will not want
 
