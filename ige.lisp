@@ -16,23 +16,25 @@
 ; Set the default bitmap path
 (defparameter *bmp-path* nil)
 
+(defparameter *engine-game* nil
+  "Current game which is the levels, game specific data and objects")
+
+(defparameter *engine-active* nil 
+  "Monitors the status of the engine to ensure init and quit correct use")
+
 ;;;; Game/Media systems - all games can use these
 (load "util")
 (load "sprites") ; sprite drawing, animation and file handling
 (load "input") ; joystick, mouse and keyboard
 
 (load "components") ; generic components and objects
+
+(load "menu") ; menu system
 (load "game") ; game and level management
 
 ;;;; Game specific data - eventually this should be elsewhere
 
 (load "pong") ; components and code for being a pong game
-
-(defparameter *engine-game* nil
-  "Current game which is the levels, game specific data and objects")
-
-(defparameter *engine-active* nil 
-  "Monitors the status of the engine to ensure init and quit correct use")
 
 (defun engine-init()
   "sets up the game engine and returns"

@@ -89,20 +89,6 @@ locate it correctly horizontally"
 	   (otherwise
 	    (error "~a is not a known control type for player-paddle-logic component"))))))))
 
-;;;; GUI 
-; first stab at gui buttons
-(defclass gui-button-press-logic(component)
-  ((key-to-press :initform nil :initarg :key-to-press)
-   (action :initform nil :initarg :action)))
-
-(defmethod handle-message((comp gui-button-press-logic) message-type &rest rest)  
-  (with-slots (key-to-press action) comp
-    (case message-type 
-      ('update
-       (if key-to-press
-	   (when (input:key-pressed-p key-to-press)
-	     (format t "arse~%")))))))
-
 ;;;; This is the component that manages the ball
 
 (defclass ball-logic(component)
@@ -188,11 +174,16 @@ locate it correctly horizontally"
     obj))
 
 
+(defun action-start-game()
+  "starts the game by going to the gameplay level"
+  (game-request-level (engine-get-game) "level 1"))
+
 (defun create-title-level()
   "creates title screeen"
   (let ((level (make-instance 'level :name "title")))
-    (level-add-object level (make-text-object "Ping ..." 20 200 :left))
+    (level-add-object level (make-text-object "Pong ..." 20 200 :left))
     (level-add-object level (make-text-object "... rocks" 620 200 :right))
+    (level-add-object level (make-menu-item "Start Game" 320 200 :center #'action-start-game))
     level))
 
 (defun create-player-select()
@@ -205,7 +196,7 @@ locate it correctly horizontally"
 
 (defun create-gameplay-level()
   "creates the pong gameplay level"
-  (let ((level (make-instance 'level :name "gameplay")))
+  (let ((level (make-instance 'level :name "level 1")))
     (level-add-object level (make-left-pong-player))
     (level-add-object level (make-right-pong-player))
     (level-add-object level (make-ball))
@@ -217,10 +208,10 @@ locate it correctly horizontally"
 
 (defun create-pong()
   "create the objects for the game and start it up"
-  (let ((game (make-instance 'game :name "Ping")))
-    (game-add-level game (create-player-select) t)
+  (let ((game (make-instance 'game :name "Pong")))
+    (game-add-level game (create-player-select))
     (game-add-level game (create-gameplay-level))
-    (game-add-level game (create-title-level))
+    (game-add-level game (create-title-level) t)
     (engine-set-game game)))
 
 
