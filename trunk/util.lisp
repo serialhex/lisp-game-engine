@@ -95,3 +95,38 @@
     (incf next-id)
     (1- next-id)))
 
+(defun safe-nth(n lst)
+  "get the nth member of a list. safely return nil
+if n is out of bounds"
+  (let ((len (length lst)))
+    (if (or
+	 (>= n len)
+	 (< n 0))
+	nil
+	(nth n lst))))
+
+(defmacro bind-var-fn((var param fn) &body body)
+  `(let ((,var (funcall ,fn ,param)))
+     ,@body))
+
+(defmacro bind-list-var-fn(list fn)
+)
+
+(defmacro offset-list-iterator(offset-name-list lst)
+"iterate over a list using an array of indices
+which are offsets to the current item. out of bounds
+indices return nil. at each iteration the symbols provided
+are initialised with the item in the list offset by 
+the amount you specify"
+`(loop 
+    for item in ,lst
+    for n from 0 
+    do
+      (format t "~a ~a~%" n item)))
+      
+
+(defmacro test1(apple)
+  (let ((var (gensym)))
+    `(let ((,var ,apple))
+       (1+ ,var))))
+

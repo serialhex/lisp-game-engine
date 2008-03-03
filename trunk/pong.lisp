@@ -179,11 +179,14 @@ locate it correctly horizontally"
   (game-request-level (engine-get-game) "level 1"))
 
 (defun create-title-level()
-  "creates title screeen"
+  "creates title screen"
   (let ((level (make-instance 'level :name "title")))
     (level-add-object level (make-text-object "Pong ..." 20 200 :left))
     (level-add-object level (make-text-object "... rocks" 620 200 :right))
-    (level-add-object level (make-menu-item "Start Game" 320 200 :center #'action-start-game))
+    (level-add-objects level 
+		       (make-menu '("Main menu" "Start game" "Do something" "Quit engine")
+				  40 40 20 :left 
+				  '(nil #'action-start-game nil nil)))
     level))
 
 (defun create-player-select()

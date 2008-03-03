@@ -18,6 +18,10 @@
   "Add an object to the object list"
   (setf (slot-value level 'objects) (cons obj (slot-value level 'objects)))) 
 
+(defun level-add-objects(level objs)
+  "Add a list of objects to the object list"
+  (setf (slot-value level 'objects) (append objs (slot-value level 'objects)))) 
+
 (defun game-add-level(game level &optional (start-level-p nil))
   "Add a level to the game hashed by name"
   (let ((levels (slot-value game 'levels))
