@@ -105,14 +105,41 @@ if n is out of bounds"
 	nil
 	(nth n lst))))
 
+; (bind-var-fn (a 3 #'(lambda (n) (* 2 n))) (format t "a ~a~%" a))
+;a 6
+;NIL
+
 (defmacro bind-var-fn((var param fn) &body body)
   `(let ((,var (funcall ,fn ,param)))
      ,@body))
 
-(defmacro bind-list-var-fn(list fn)
-)
+;(bind-list-var-fn (((a 1) (b 2) (c 3)) 
+;		   #'(lambda (n) (* 3 n))) 
+;  (format t "~a ~a ~a~%" a b c))
+; 3 6 9
 
-(defmacro offset-list-iterator(offset-name-list lst)
+(defmacro bind-list-var-fn((lst fn) &body body)
+  (if (null lst)
+      `(progn ,@body)
+      `(let ((,(first (car lst))
+	      (funcall ,fn ,(second (car lst)))))
+	 (bind-list-var-fn (,(cdr lst) ,fn)
+	   ,@body))))
+
+; (bind-vars ((a b c) (1 (+ 4 5) 3)) (format t "~a ~a ~a" a b c))
+;1 9 3
+
+(defmacro bind-vars((vars vals) &body body)
+  `(let ,(mapcar 
+	  #'(lambda(var val) 
+	      `(,var ,val)) vars vals)
+     ,@body))
+
+
+;(offset-list-iterator (((prev -1) (cur 0) (next 1)) '(1 2 3 5 6 7)) 
+; (format t "prev ~a cur ~a next ~a~%" prev cur next))
+
+(defmacro offset-list-iterator((name-offset-list lst) &body body)
 "iterate over a list using an array of indices
 which are offsets to the current item. out of bounds
 indices return nil. at each iteration the symbols provided
@@ -120,13 +147,20 @@ are initialised with the item in the list offset by
 the amount you specify"
 `(loop 
     for item in ,lst
-    for n from 0 
+    for count from 0 
     do
-      (format t "~a ~a~%" n item)))
-      
+      (bind-list-var-fn (,name-offset-list 
+			 #'(lambda(n) (safe-nth (+ n count) ,lst)))
+	,@body)))
 
 (defmacro test1(apple)
   (let ((var (gensym)))
     `(let ((,var ,apple))
        (1+ ,var))))
 
+;;;; debugging utils
+
+; This is from onlisp, prints out a macro 
+; pretty handy when developing one
+(defmacro mac (expr) 
+  `(pprint (macroexpand-1 ',expr)))
