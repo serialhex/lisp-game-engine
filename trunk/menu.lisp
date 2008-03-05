@@ -32,16 +32,22 @@
 next item fields so that each item points to the one following it in the 
 list and vice versa. If wrap-p is true then the last item goes to the first
 and again, the opposite is true"
-  (let ((first-item (first list-of-menu-objects)))
-    (loop for item-index from 0 to (1- (length list-of-menu-objects)) do
-)))
+  (offset-list-iterator (((prev -1) (cur 0) (next 1)) list-of-menu-objects)
+    (with-component-of-type-slots (cur 'gui-item (prev-item next-item))
+      (setf prev-item prev)
+      (setf next-item next)))
+  list-of-menu-objects)
 	 
-
 (defun make-menu(list-of-text x y y-spacing justification list-of-actions)
   "returns a list of objects, which together make up a menu"
-  (menu-fix-up-prev-next
-   (loop 
-      for text in list-of-text 
-      for action in list-of-actions
-      for y-pos = y then (+ y-pos y-spacing) collect
-	(make-menu-item text x y-pos justification action))))
+  (let ((objects (loop 
+		    for text in list-of-text 
+		    for action in list-of-actions
+		    for y-pos = y then (+ y-pos y-spacing) collect
+		      (make-menu-item text x y-pos justification action))))
+    (menu-fix-up-prev-next objects)))
+
+
+
+
+   
