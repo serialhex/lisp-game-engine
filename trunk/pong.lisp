@@ -174,6 +174,15 @@ locate it correctly horizontally"
     obj))
 
 
+(defun action-main-menu()
+  (format t "Main menu (todo)~%"))
+
+(defun action-do-something()
+  (format t "do something !~%"))
+
+(defun action-quit-engine()
+  (format t "Quitter!~%"))
+
 (defun action-start-game()
   "starts the game by going to the gameplay level"
   (game-request-level (engine-get-game) "level 1"))
@@ -184,9 +193,15 @@ locate it correctly horizontally"
     (level-add-object level (make-text-object "Pong ..." 20 200 :left))
     (level-add-object level (make-text-object "... rocks" 620 200 :right))
     (level-add-objects level 
-		       (make-menu '("Main menu" "Start game" "Do something" "Quit engine")
-				  40 40 20 :left 
-				  '(nil #'action-start-game nil nil)))
+		       (make-menu '("Main menu" 
+				    "Start game" 
+				    "Do something" 
+				    "Quit engine")  
+				    '(action-main-menu 
+				      action-start-game 
+				      action-do-something 
+				      action-quit-engine)
+				    1 40 40 20 :left ))
     level))
 
 (defun create-player-select()

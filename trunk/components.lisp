@@ -67,6 +67,13 @@
 	      (return-from find-component-with-type comp)))
 	nil)))
 
+(defmacro with-component-of-type-slots((object type slots) &body body)
+  `(let ((comp (find-component-with-type ,object ,type)))
+     (when comp
+       (with-slots ,slots comp
+	 ,@body))))
+     
+
 ;;; Some useful generic components, this may move
 
 ;;;; TODO add rotational velocity and
