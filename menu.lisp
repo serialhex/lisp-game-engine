@@ -5,38 +5,46 @@
    (next-item :initform nil :initarg :next-item)
    (action :initform nil :initarg :action :documentation "What to do when selected and activated")
    (active-p :initform nil :initarg :active-p :documentation "True if active")
-   (selected-p :initform nil :initarg :selected-p :documentation "True if selected (highlighted)")))
-
-
+   (selected-p :initform nil :initarg :selected-p :documentation "True if selected (highlighted)")
+   (default-color :initform (sdl:color :r #xff :g #xff :b #xff) :initarg :default-color)
+   (selected-color :initform (sdl:color :r #xff :g #xff :b #xff) :initarg :selected-color)))
 
 (defmethod handle-message((comp menu-item) message-type &rest rest)  
-  (with-slots (prev-item next-item action active-p selected-p) comp
-    (case message-type 
-      ('update
-       (cond 
-	 ((input:key-pressed-p :SDL-KEY-UP)
-	  (if selected-p
-	      (if prev-item
-		  (progn
-		    (setf selected-p nil)
-		    (with-component-of-type-slots (prev-item 'menu-item (selected-p))
-		      (setf selected-p t))))))	      
-	 ((input:key-pressed-p :SDL-KEY-DOWN)
-	  (if selected-p
-	      (if next-item
-		  (progn
-		    (setf selected-p nil)
-		    (with-component-of-type-slots (next-item 'menu-item (selected-p))
-		      (setf selected-p t))))))	      
-	 ((input:key-pressed-p :SDL-KEY-RETURN)
-	  (if (and selected-p action)
-	      (funcall action))))))))
+  (let ((owner (slot-value comp 'owner)))
+    (with-slots (prev-item next-item action active-p selected-p selected-color default-color) comp
+      (case message-type 
+	('update
+	 (cond 
+	   ((input:key-pressed-p :SDL-KEY-UP)
+	    (if selected-p
+		(if prev-item
+		    (progn
+		      (setf selected-p nil)
+		      (with-component-of-type-slots (owner 'text (color))
+			(setf color default-color))
+		      (with-component-of-type-slots (prev-item 'menu-item (selected-p))
+			(setf selected-p t))
+		      (with-component-of-type-slots (prev-item 'text (color))
+			(setf color selected-color))))))
+	   ((input:key-pressed-p :SDL-KEY-DOWN)
+	    (if selected-p
+		(if next-item
+		    (progn
+		      (setf selected-p nil)
+		      (with-component-of-type-slots (owner 'text (color))
+			(setf color default-color))
+		      (with-component-of-type-slots (next-item 'menu-item (selected-p))
+			     (setf selected-p t))
+		      (with-component-of-type-slots (next-item 'text (color))
+			(setf color selected-color))))))
+		((input:key-pressed-p :SDL-KEY-RETURN)
+		 (if (and selected-p action)
+		     (funcall action)))))))))
 	  
-
-(defun make-menu-item(text x y justification action &key prev-item next-item)
+(defun make-menu-item(text x y justification action default-color selected-color)
   "returns a menu item made up of a text object and a menu component"
   (let ((menu-item (make-text-object text x y justification)))
-    (add-component menu-item (make-instance 'menu-item :action action :prev-item prev-item :next-item next-item))
+    (add-component menu-item (make-instance 'menu-item :action action :default-color default-color :selected-color selected-color))
     menu-item))
 
 (defun menu-fix-up-prev-next(list-of-menu-objects &optional (wrap-p nil))
@@ -50,13 +58,13 @@ and again, the opposite is true"
       (setf next-item next)))
   list-of-menu-objects)
 	 
-(defun make-menu(list-of-text list-of-actions initial-selected x y y-spacing justification)
+(defun make-menu(list-of-text list-of-actions initial-selected x y y-spacing justification default-color selected-color)
   "returns a list of objects, which together make up a menu"
   (let ((objects (loop 
 		    for text in list-of-text 
 		    for action in list-of-actions
 		    for y-pos = y then (+ y-pos y-spacing) collect
-		      (make-menu-item text x y-pos justification action))))
+		      (make-menu-item text x y-pos justification action default-color selected-color))))
     (with-component-of-type-slots ((nth initial-selected objects) 'menu-item (selected-p))
       (setf selected-p t))
     (menu-fix-up-prev-next objects)))
