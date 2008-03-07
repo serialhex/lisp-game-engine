@@ -201,7 +201,9 @@ locate it correctly horizontally"
 				      action-start-game 
 				      action-do-something 
 				      action-quit-engine)
-				    1 40 40 20 :left ))
+				    0 40 40 20 :left 
+				    (sdl:color :r #xe0 :g #xe0 :b #xe0)
+				    (sdl:color :r #xff :g #xff :b #xff)))
     level))
 
 (defun create-player-select()
