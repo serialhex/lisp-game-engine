@@ -14,7 +14,8 @@
 (defparameter *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44))
 
 ; Set the default bitmap path
-(defparameter *bmp-path* nil)
+#-unix(defparameter *bmp-path* nil)
+#+unix(defparameter *bmp-path* "/home/justinhj/lisp-game-engine/")
 
 (defparameter *engine-game* nil
   "Current game which is the levels, game specific data and objects")
