@@ -4,7 +4,7 @@ Notes on lisp game engine
 
 ##############################################
 
-(C) 2007 Justin Heyes-Jones
+(C) 2008 Justin Heyes-Jones
 
 ##############################################
 
@@ -19,14 +19,13 @@ This lets me do the game update as a list of message types.
 
 VHIGH WIP Pong prototype
 
-      need to parameterise screen height, width etc
+      need to parameterise screen height, width etc playfield and camera
 
       need a logical play area for pong (score and so on seperate)
 
             the window needs to know what the camera offset is 
 
 X      player 1 and 2
-
 X      ai
 X	needs to get ball trajectory 
 MED       bug

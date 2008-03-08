@@ -131,9 +131,9 @@ locate it correctly horizontally"
     (add-component obj pong)
     obj))
 
-(defun make-text-object(string x y justification)
+(defun make-text-object(string x y justification color)
   (let ((phys (make-instance '2d-physics :x x :y y))
-	(text (make-instance 'text :justification justification :string string))
+	(text (make-instance 'text :justification justification :string string :color color))
 	(obj (make-instance 'composite-object
 			    :name "text object 1")))
     (add-component obj phys)
@@ -187,21 +187,22 @@ locate it correctly horizontally"
   "starts the game by going to the gameplay level"
   (game-request-level (engine-get-game) "level 1"))
 
+(defun std-text-color()
+  (sdl:color :r #xe0 :g #xe0 :b #xe0))
+
 (defun create-title-level()
   "creates title screen"
   (let ((level (make-instance 'level :name "title")))
-    (level-add-object level (make-text-object "Pong ..." 20 200 :left))
-    (level-add-object level (make-text-object "... rocks" 620 200 :right))
+    (level-add-object level (make-text-object "Pong ..." 20 200 :left (std-text-color)))
+    (level-add-object level (make-text-object "... rocks" 620 200 :right (std-text-color)))
     (level-add-objects level 
-		       (make-menu '("Main menu" 
-				    "Start game" 
-				    "Do something" 
-				    "Quit engine")  
-				    '(action-main-menu 
-				      action-start-game 
-				      action-do-something 
+		       (make-menu  '("Start game" 
+				    "Quit")  
+				    '(action-start-game 
 				      action-quit-engine)
-				    0 40 40 20 :left 
+				    0 
+				    320 100 
+				    20 :center 
 				    (sdl:color :r #xe0 :g #xe0 :b #xe0)
 				    (sdl:color :r #xff :g #xff :b #xff)))
     level))
@@ -209,8 +210,8 @@ locate it correctly horizontally"
 (defun create-player-select()
   "creates player select screen"
   (let ((level (make-instance 'level :name "player select")))
-    (level-add-object level (make-text-object "Choose number of players" 320 200 :center))
-    (level-add-object level (make-text-object "And/Or Ai level" 320 300 :center))
+    (level-add-object level (make-text-object "Choose number of players" 320 200 :center (std-text-color)))
+    (level-add-object level (make-text-object "And/Or Ai level" 320 300 :center (std-text-color)))
     level))
 
 
@@ -222,7 +223,7 @@ locate it correctly horizontally"
     (level-add-object level (make-ball))
     (level-add-object level 
 		      (add-component 
-		       (make-text-object "fps" 300 10 :center)
+		       (make-text-object "fps" 300 10 :center (std-text-color))
 		       (make-instance 'frame-rate-to-text)))
     level))
 
