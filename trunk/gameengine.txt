@@ -37,7 +37,7 @@ MED       bug
 WIP      game menu - choose players and AI 
    
 
-      bonus mode, lots of balls.
+      bonus modes, lots of balls.
       
 X Design for more than one level 
 
