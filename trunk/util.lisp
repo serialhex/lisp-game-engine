@@ -105,6 +105,11 @@ if n is out of bounds"
 	nil
 	(nth n lst))))
 
+(defun random-nth(lst) 
+  "return a random element from the list"
+  (let ((l (length lst))) 
+    (nth (random l) lst)))
+
 ; (bind-var-fn (a 3 #'(lambda (n) (* 2 n))) (format t "a ~a~%" a))
 ;a 6
 ;NIL
@@ -164,3 +169,5 @@ the amount you specify"
 ; pretty handy when developing one
 (defmacro mac (expr) 
   `(pprint (macroexpand-1 ',expr)))
+
+

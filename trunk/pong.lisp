@@ -115,6 +115,32 @@ locate it correctly horizontally"
 		   (setf vx (abs vx))
 		   (setf vx (* -1 (abs vx)))))))))))
 
+;;;; This is the component that manages the high level game logic
+
+(defclass pong-logic(component)
+  ((left-score :initform 0 :initarg :left-score)
+   (right-score :initform 0 :initarg :right-score)
+   (win-score :initform 1 :initarg :win-score)
+   (last-scorer :initform nil :initarg :last-scorer)))
+
+(defmethod handle-message((comp pong-logic) message-type &rest rest)  
+  (let ((owner (slot-value comp 'owner)))
+    (case message-type 
+      ('update
+       (format t "update pong logic~%")))))
+
+(defun make-game-logic()
+  "constructs an object with no visible components that
+has the responsiblity for managing a single game of pong"
+  (let ((obj (make-instance 'composite-object :name "game logic"))
+	(logic (make-instance 'pong-logic
+			    :left-score 0
+			    :right-score 0
+			    :win-score 10
+			    :last-scorer (random-nth '(left right)))))
+    (add-component obj logic)
+    obj))
+
 (defun make-left-pong-player()
   (let ((phys (make-instance '2d-physics
 			     :collide-type 'paddle))
@@ -221,6 +247,7 @@ locate it correctly horizontally"
     (level-add-object level (make-left-pong-player))
     (level-add-object level (make-right-pong-player))
     (level-add-object level (make-ball))
+    (level-add-object level (make-game-logic))
     (level-add-object level 
 		      (add-component 
 		       (make-text-object "fps" 300 10 :center (std-text-color))
