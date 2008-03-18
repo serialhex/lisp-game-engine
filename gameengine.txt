@@ -10,6 +10,20 @@ Notes on lisp game engine
 
 TODO
 
+Most of the TODO list is bollocks
+
+Current probably not bollocks
+
+More functions to iterate over compoments more effieicently
+Find components and objects of name
+
+Multiple components of same type in an object
+
+Tree of objects? eg the menu system could all be one object?
+
+
+End of current
+
 VHIGH remove the parameter from 'update event. The game will be able
 to specify a list of messages that are sent every frame, but these
 will not have arguments. The only useful argument is frame delta, and
