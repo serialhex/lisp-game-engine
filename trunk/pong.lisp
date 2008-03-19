@@ -127,7 +127,7 @@ locate it correctly horizontally"
   (let ((owner (slot-value comp 'owner)))
     (case message-type 
       ('update
-       (format t "update pong logic~%")))))
+       t))))
 
 (defun make-game-logic()
   "constructs an object with no visible components that
@@ -157,6 +157,7 @@ has the responsiblity for managing a single game of pong"
     (add-component obj pong)
     obj))
 
+; todo should name the text object with a unique name or make the user do it.
 (defun make-text-object(string x y justification color)
   (let ((phys (make-instance '2d-physics :x x :y y))
 	(text (make-instance 'text :justification justification :string string :color color))
