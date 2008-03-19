@@ -16,6 +16,16 @@
     (dolist (comp (slot-value obj 'components))
       (apply #'handle-message comp message args))))
 
+(defun send-message-to-object-component(objects name component message &rest args)
+  "used to send a message to a named objects component"
+  (let ((obj (find-object-with-name objects name)))
+    (if obj
+	(let ((comp (find-component-with-type obj component)))
+	  (if comp
+	      (apply #'handle-message comp message args)
+	      (error "component not found")))
+	(error "object not found"))))
+
 (defun find-object-with-name(objects name)
   "find object with name"
   (find-if 
@@ -29,9 +39,10 @@
 	 (lambda (obj) (string-equal name (slot-value obj 'name)))
 	 objects)))
 
-(defun debug-view-object-names(objects)
-  (dolist (obj objects) 
-    (format t "name ~a~%" (slot-value obj 'name))))
+(defun game-debug-view-active-objects()
+  (let ((objects (slot-value (engine-get-game) 'active-objects)))
+    (dolist (obj objects) 
+      (format t "name ~a~%" (slot-value obj 'name)))))
 
 (defun get-components-of-type(objects type)
   (let ((found-components nil))
@@ -224,6 +235,9 @@
 (defmethod handle-message((comp text) message-type &rest rest)
   (let ((owner (slot-value comp 'owner)))
     (case message-type 
+      ('change-text
+       (with-slots (string) comp
+	   (setf string (first rest))))
       ('draw
        (with-slots (string justification color) comp
 	 (let ((phys-comp (find-component-with-type owner '2d-physics)))
