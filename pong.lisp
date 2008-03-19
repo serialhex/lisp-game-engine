@@ -121,6 +121,7 @@ locate it correctly horizontally"
 		 (setf vx 0.0)
 		 (setf vy 0.0)
 		 (setf x (screen-center-x))
+		 (setf y (screen-center-y))
 		 (setf pause 3.0)))
 	     
 	     (when (> (+ x width) (+ 20 639))
@@ -128,6 +129,7 @@ locate it correctly horizontally"
 		 (setf vx 0.0)
 		 (setf vy 0.0)
 		 (setf x (screen-center-x))
+		 (setf y (screen-center-y))
 		 (setf pause 3.0)))
 
   	     ; top of screen handling - just bounce
