@@ -92,28 +92,57 @@ locate it correctly horizontally"
 ;;;; This is the component that manages the ball
 
 (defclass ball-logic(component)
-  ())
+  ((pause :initform 3.0 :initarg :pause)))
 
 (defmethod handle-message((comp ball-logic) message-type &rest rest)  
   (let ((owner (slot-value comp 'owner)))
     (case message-type 
       ('update
-       (let ((phys (find-component-with-type owner '2d-physics)))
+       (let ((phys (find-component-with-type owner '2d-physics))
+	     (dt (/ 1.0 (sdl:frame-rate))))
 	 (with-slots (x y vx vy ax ay width height collision-list) phys
-	   ; simple screen boundary handling
-	   (when (< x 0)
-	     (setf vx (abs vx)))
-	   (when (> (+ x width) 639)
-	     (setf vx (* -1 (abs vx))))
-	   (when (< y 0)
-	     (setf vy (abs vy)))
-	   (when (> (+ y height) 479)
-	     (setf vy (* -1 (abs vy))))
-	   ; on collision with player 
-           (if collision-list 
-	       (if (< x (screen-center-x))
-		   (setf vx (abs vx))
-		   (setf vx (* -1 (abs vx)))))))))))
+	   (with-slots (pause) comp
+
+	     ; pause between goals handling 
+	   
+	     (if (> pause 0.0)
+		 (progn
+		   (decf pause dt)
+		 (if (< pause 0.0)
+		     (progn 
+		       (setf pause 0.0)
+		       (setf vx (random-range 4.0 10.0))
+		       (setf vy (random-range -8.0 8.0))))))
+
+	     ; hit goal handling	      
+
+	     (when (< x -20)
+	       (progn
+		 (setf vx 0.0)
+		 (setf vy 0.0)
+		 (setf x (screen-center-x))
+		 (setf pause 3.0)))
+	     
+	     (when (> (+ x width) (+ 20 639))
+	       (progn
+		 (setf vx 0.0)
+		 (setf vy 0.0)
+		 (setf x (screen-center-x))
+		 (setf pause 3.0)))
+
+  	     ; top of screen handling - just bounce
+
+	     (when (< y 0)
+	       (setf vy (abs vy)))
+	     
+	     (when (> (+ y height) 479)
+	       (setf vy (* -1 (abs vy))))
+
+	     ; on collision with player 
+	     (if collision-list 
+		 (if (< x (screen-center-x))
+		     (setf vx (abs vx))
+		     (setf vx (* -1 (abs vx))))))))))))
 
 ;;;; This is the component that manages the high level game logic
 
