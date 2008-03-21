@@ -88,6 +88,11 @@
 (defun sy(y)
   (integer-in-range y 0 480))
 
+;;;; random unique name
+
+(defun random-unique-name()
+  (format nil "anon ~a" (get-next-uid)))
+
 ;;;; manage unique id's
 (let ((next-id 0))
   (defun get-next-uid()
