@@ -188,12 +188,13 @@ has the responsiblity for managing a single game of pong"
     (add-component obj pong)
     obj))
 
-; todo should name the text object with a unique name or make the user do it.
-(defun make-text-object(string x y justification color)
+(defun make-text-object(string x y justification color &optional name)
+  "constructs an object with a text and physics components
+and the specified text properties"
   (let ((phys (make-instance '2d-physics :x x :y y))
 	(text (make-instance 'text :justification justification :string string :color color))
 	(obj (make-instance 'composite-object
-			    :name "text object 1")))
+			    :name (or name (random-unique-name)))))
     (add-component obj phys)
     (add-component obj text)
     obj))
@@ -248,7 +249,7 @@ has the responsiblity for managing a single game of pong"
 (defun std-text-color()
   (sdl:color :r #xe0 :g #xe0 :b #xe0))
 
-(defun create-title-level()
+(defun make-title-level()
   "creates title screen"
   (let ((level (make-instance 'level :name "title")))
     (level-add-object level (make-text-object "Pong ..." 20 200 :left (std-text-color)))
@@ -265,33 +266,35 @@ has the responsiblity for managing a single game of pong"
 				    (sdl:color :r #xff :g #xff :b #xff)))
     level))
 
-(defun create-player-select()
+(defun make-player-select()
   "creates player select screen"
   (let ((level (make-instance 'level :name "player select")))
     (level-add-object level (make-text-object "Choose number of players" 320 200 :center (std-text-color)))
     (level-add-object level (make-text-object "And/Or Ai level" 320 300 :center (std-text-color)))
     level))
 
+(defun make-frame-rate-display()
+  "make an object that displays the average frame rate"
+  (let ((obj (make-text-object "fps" 300 10 :center (std-text-color))))
+    (add-component obj (make-instance 'frame-rate-to-text))
+    obj))
 
-(defun create-gameplay-level()
+(defun make-gameplay-level()
   "creates the pong gameplay level"
   (let ((level (make-instance 'level :name "level 1")))
     (level-add-object level (make-left-pong-player))
     (level-add-object level (make-right-pong-player))
     (level-add-object level (make-ball))
     (level-add-object level (make-game-logic))
-    (level-add-object level 
-		      (add-component 
-		       (make-text-object "fps" 300 10 :center (std-text-color))
-		       (make-instance 'frame-rate-to-text)))
+    (level-add-object level (make-frame-rate-display))
     level))
 
-(defun create-pong()
+(defun make-pong()
   "create the objects for the game and start it up"
   (let ((game (make-instance 'game :name "Pong")))
-    (game-add-level game (create-player-select))
-    (game-add-level game (create-gameplay-level))
-    (game-add-level game (create-title-level) t)
+    (game-add-level game (make-player-select))
+    (game-add-level game (make-gameplay-level))
+    (game-add-level game (make-title-level) t)
     (engine-set-game game)))
 
 
