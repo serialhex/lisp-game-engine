@@ -14,7 +14,7 @@ Most of the TODO list is bollocks
 
 Current probably not bollocks
 
-More functions to iterate over compoments more effieicently
+More functions to iterate over components more efficiently
 Find components and objects of name
 
 Multiple components of same type in an object
@@ -35,12 +35,12 @@ VHIGH WIP Pong prototype
 
       need to parameterise screen height, width etc playfield and camera
 
-      need a logical play area for pong (score and so on seperate)
+      need a logical play area for pong (score and so on separate)
 
             the window needs to know what the camera offset is 
 
 X      player 1 and 2
-X      ai
+X      AI
 X	needs to get ball trajectory 
 MED       bug
 
