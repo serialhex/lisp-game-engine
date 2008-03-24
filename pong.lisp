@@ -103,9 +103,12 @@
       (with-slots ((bx x) (by y) (bvx vx) (bvy vy) height) ball-phys
 	(if (or 
 	     (and (< bx x) (> bvx 0))
-	     (and (> bx x) (< bvx 0)))
+	     (and (> bx x) (< bvx 0))
+	     (= bvx 0))
 	    (let* ((target-y 
-		    (get-ball-y-intersect-at-x bx by bvx bvy x height))
+		    (if (= 0 bvx)
+			(screen-center-y) ; if ball not moving, go to center
+			(get-ball-y-intersect-at-x bx by bvx bvy x height)))
 		   (sign (if (< target-y y) -1 1)))
 	      (setf vy (* sign 
 			  (min *hard-ai-paddle-speed*
