@@ -12,11 +12,66 @@
 
 (defparameter *paddle-start-y* (/ 480 2))
 
+;; the pong game subclass the game object to make your game
+;; this is not a composite-object or a component
+;; it's a subclass of game, which has level management 
+;; you put your high level game logic in here.
+;; it's up to you what the game update does, but it should
+;; at the very least update and draw the current level 
+;; objects and components
+;; In this case the update sends update, collide and draw
+;; and before that it updates itself, managing the current 
+;; level. In addition it has a message-handler which objects
+;; can talk to using 
+;; (handle-message (game message-type &rest rest))
+
+(defclass pong-game(game)
+  ((left-score :initform 0 :initarg :left-score)
+   (right-score :initform 0 :initarg :right-score)
+   (hits-this-rally :initform 0 :initarg :hits-this-rally)
+   (win-score :initform 10 :initarg :win-score)
+   (last-scorer :initform nil :initarg :last-scorer)))
+
+(defmethod update((game pong-game))
+  t)
+
+(defmethod handle-message((game pong-game) message-type &rest rest)  
+  (with-slots (active-objects left-score right-score) game
+    (case message-type 
+      ('left-scored
+       (incf left-score)
+       (send-message-to-object-component active-objects "left score"
+					 'text 'change-text 
+					 (format nil "~2,'0d" left-score)))
+      ('right-scored
+       (incf right-score)
+       (send-message-to-object-component active-objects "right score"
+					 'text 'change-text 
+					 (format nil "~2,'0d" right-score))))))
+
+; todo - optimise sending messages to all components of certain types
+; for example populate lists based on what messages they receive,
+; which would require changing handle-message to store the messages 
+; in an accessible way...
+
+(defmethod game-update((game pong-game))
+  (with-slots (current-level requested-level start-level active-objects) game
+
+    ; first update the pong-game objects
+    ; a subclass of game
+    ; does all the game high level logic
+    (update game)
+
+    ; now send various messages to the game objects
+    ; this way the objects know that update is done before collide
+    ; which is done before draw ...
+    (send-message-to-all-objects active-objects 'update (/ 1.0 (sdl:frame-rate)))
+    (send-message-to-all-objects active-objects 'collide)
+    (send-message-to-all-objects active-objects 'draw)))
+
 ;;;; the brains behind the player paddle
 (defclass player-paddle-logic(component)
-  ((score :initform 0 :initarg :score)
-   (hits-this-rally :initform 0 :initarg :hits-this-rally)
-   (control-type :initform 'none :initarg :control-type) ; none, ai-easy, ai-hard, player etc
+  ((control-type :initform 'none :initarg :control-type) ; none, ai-easy, ai-hard, player etc
    (side :initform 'left :initarg :side)))
 
 (defparameter *player-paddle-speed* 5.0)
@@ -118,6 +173,7 @@ locate it correctly horizontally"
 
 	     (when (< x -20)
 	       (progn
+		 (handle-message (engine-get-game) 'right-scored)
 		 (setf vx 0.0)
 		 (setf vy 0.0)
 		 (setf x (screen-center-x))
@@ -126,6 +182,7 @@ locate it correctly horizontally"
 	     
 	     (when (> (+ x width) (+ 20 639))
 	       (progn
+		 (handle-message (engine-get-game) 'left-scored)
 		 (setf vx 0.0)
 		 (setf vy 0.0)
 		 (setf x (screen-center-x))
@@ -145,32 +202,6 @@ locate it correctly horizontally"
 		 (if (< x (screen-center-x))
 		     (setf vx (abs vx))
 		     (setf vx (* -1 (abs vx))))))))))))
-
-;;;; This is the component that manages the high level game logic
-
-(defclass pong-logic(component)
-  ((left-score :initform 0 :initarg :left-score)
-   (right-score :initform 0 :initarg :right-score)
-   (win-score :initform 1 :initarg :win-score)
-   (last-scorer :initform nil :initarg :last-scorer)))
-
-(defmethod handle-message((comp pong-logic) message-type &rest rest)  
-  (let ((owner (slot-value comp 'owner)))
-    (case message-type 
-      ('update
-       t))))
-
-(defun make-game-logic()
-  "constructs an object with no visible components that
-has the responsiblity for managing a single game of pong"
-  (let ((obj (make-instance 'composite-object :name "game logic"))
-	(logic (make-instance 'pong-logic
-			    :left-score 0
-			    :right-score 0
-			    :win-score 10
-			    :last-scorer (random-nth '(left right)))))
-    (add-component obj logic)
-    obj))
 
 (defun make-left-pong-player()
   (let ((phys (make-instance '2d-physics
@@ -279,19 +310,41 @@ and the specified text properties"
     (add-component obj (make-instance 'frame-rate-to-text))
     obj))
 
+(defun score-x-position(side)
+  (if (eq side 'left)
+      20
+      (- 640 20)))
+
+(defun score-text-justify(side)
+  (if (eq side 'left)
+      :left
+      :right))
+
+(defun make-score-text(side)
+  "make a text object for displaying the left or right score"
+  (let ((name (string-downcase (format nil "~a score" side))))
+    (make-text-object "0" 
+		      (score-x-position side)
+		      20
+		      (score-text-justify side)
+		      (sdl:color :r 255 :g 255 :b 255)
+		      name)))
+
 (defun make-gameplay-level()
   "creates the pong gameplay level"
   (let ((level (make-instance 'level :name "level 1")))
     (level-add-object level (make-left-pong-player))
     (level-add-object level (make-right-pong-player))
     (level-add-object level (make-ball))
-    (level-add-object level (make-game-logic))
     (level-add-object level (make-frame-rate-display))
+    (level-add-object level (make-score-text 'left))
+    (level-add-object level (make-score-text 'right))
     level))
 
 (defun make-pong()
   "create the objects for the game and start it up"
-  (let ((game (make-instance 'game :name "Pong")))
+  (let ((game (make-instance 'pong-game 
+			     :name "Pong")))
     (game-add-level game (make-player-select))
     (game-add-level game (make-gameplay-level))
     (game-add-level game (make-title-level) t)

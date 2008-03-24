@@ -1,3 +1,4 @@
+
 ;;;; Code which manages games and levels
 
 (defclass level()
@@ -36,21 +37,17 @@
     (setf current-level requested-level)
     (setf active-objects (slot-value current-level 'objects))))
 
-(defun game-update(game)
+(defgeneric game-update(game))
+
+(defmethod game-update :before ((game game))
  "Update game. Manages level changes and updates the active list of objects.
-I may make this a method and ensure that this is called but let the user code
-do game specific update"
- (when game
-   (with-slots (current-level requested-level start-level active-objects) game
-     (if (null current-level)
-	 (setf requested-level start-level))
-     (unless (equal current-level requested-level)
-       (game-change-level game))
-       ; Send the user define messages and arguments for each update
-       ; TODO this will actually be user defined, not determined here
-     (send-message-to-all-objects active-objects 'update (/ 1.0 (sdl:frame-rate)))
-     (send-message-to-all-objects active-objects 'collide)
-     (send-message-to-all-objects active-objects 'draw))))
+Note that the user needs a game update that will be called after this, which 
+must update the objects by sending appropriate update messages."
+ (with-slots (current-level requested-level start-level active-objects) game
+   (if (null current-level)
+       (setf requested-level start-level))
+   (unless (equal current-level requested-level)
+     (game-change-level game))))
 
 (defun game-request-level(game level-name)
   "Ask the game to change levels next update"
