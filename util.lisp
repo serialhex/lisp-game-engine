@@ -115,6 +115,9 @@ if n is out of bounds"
   (let ((l (length lst))) 
     (nth (random l) lst)))
 
+(defmacro nor(&body body)
+  `(not (or ,@body)))
+
 ; (bind-var-fn (a 3 #'(lambda (n) (* 2 n))) (format t "a ~a~%" a))
 ;a 6
 ;NIL
