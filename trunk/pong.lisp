@@ -35,19 +35,26 @@
 (defmethod update((game pong-game))
   t)
 
+(defun handle-game-over(left-score right-score win-score)
+  "check for game over, and go to the game over level"
+  (when (or (= win-score left-score) (= win-score right-score))
+    (game-request-level (engine-get-game) "game over")))
+
 (defmethod handle-message((game pong-game) message-type &rest rest)  
-  (with-slots (active-objects left-score right-score) game
+  (with-slots (active-objects left-score right-score win-score) game
     (case message-type 
       ('left-scored
        (incf left-score)
        (send-message-to-object-component active-objects "left score"
 					 'text 'change-text 
-					 (format nil "~2,'0d" left-score)))
+					 (format nil "~2,'0d" left-score))
+       (handle-game-over left-score right-score win-score))
       ('right-scored
        (incf right-score)
        (send-message-to-object-component active-objects "right score"
 					 'text 'change-text 
-					 (format nil "~2,'0d" right-score))))))
+					 (format nil "~2,'0d" right-score))
+       (handle-game-over left-score right-score win-score)))))
 
 ; todo - optimise sending messages to all components of certain types
 ; for example populate lists based on what messages they receive,
@@ -287,9 +294,9 @@ and the specified text properties"
   "creates title screen"
   (let ((level (make-instance 'level :name "title")))
     (level-add-object level (make-text-object "Pong ..." 20 200 :left (std-text-color)))
-    (level-add-object level (make-text-object "... rocks" 620 200 :right (std-text-color)))
+    (level-add-object level (make-text-object "... in Common Lisp" 620 200 :right (std-text-color)))
     (level-add-objects level 
-		       (make-menu  '("Start game" 
+		       (make-menu '("Start game" 
 				    "Quit")  
 				    '(action-start-game 
 				      action-quit-engine)
@@ -297,10 +304,27 @@ and the specified text properties"
 				    320 100 
 				    20 :center 
 				    (sdl:color :r #xe0 :g #xe0 :b #xe0)
-				    (sdl:color :r #xff :g #xff :b #xff)))
+				    (sdl:color :r #x00 :g #xff :b #x00)))
     level))
 
-(defun make-player-select()
+(defun action-main-menu()
+  (game-request-level (engine-get-game) "title"))
+
+(defun make-game-over-level()
+  "creates game over screen"
+  (let ((level (make-instance 'level :name "game over")))
+    (level-add-objects level
+		       (make-menu  '("GAME OVER") 
+				   '(action-main-menu)
+				   0 
+				   320 200 
+				   20 :center 
+				   (sdl:color :r #xe0 :g #xe0 :b #xe0)
+				   (sdl:color :r #xff :g #xff :b #xff)))
+
+    level))
+
+(defun make-player-select-level()
   "creates player select screen"
   (let ((level (make-instance 'level :name "player select")))
     (level-add-object level (make-text-object "Choose number of players" 320 200 :center (std-text-color)))
@@ -323,10 +347,14 @@ and the specified text properties"
       :left
       :right))
 
+(defun score-string(score)
+  "generate the score string"
+  (format nil "~2,'0d" score))
+
 (defun make-score-text(side)
   "make a text object for displaying the left or right score"
   (let ((name (string-downcase (format nil "~a score" side))))
-    (make-text-object "0" 
+    (make-text-object (score-string 0) 
 		      (score-x-position side)
 		      20
 		      (score-text-justify side)
@@ -348,9 +376,10 @@ and the specified text properties"
   "create the objects for the game and start it up"
   (let ((game (make-instance 'pong-game 
 			     :name "Pong")))
-    (game-add-level game (make-player-select))
+    (game-add-level game (make-player-select-level))
     (game-add-level game (make-gameplay-level))
     (game-add-level game (make-title-level) t)
+    (game-add-level game (make-game-over-level))
     (engine-set-game game)))
 
 

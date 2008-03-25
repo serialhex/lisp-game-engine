@@ -82,8 +82,10 @@ and again, the opposite is true"
 		    for action in list-of-actions
 		    for y-pos = y then (+ y-pos y-spacing) collect
 		      (make-menu-item text x y-pos justification action default-color selected-color))))
-    (with-component-of-type-slots ((nth initial-selected objects) 'menu-item (selected-p))
-      (setf selected-p t))
+    (with-component-of-type-slots ((nth initial-selected objects) 'menu-item (owner selected-p))
+      (with-component-of-type-slots (owner 'text (color))
+	(setf selected-p t)
+	(setf color selected-color)))
     (menu-set-prev-next objects)))
 
 
