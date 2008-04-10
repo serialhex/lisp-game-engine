@@ -149,7 +149,7 @@
 
       (if (< build-converter-result 0)
 	  (progn
-	    (sdl-cffi::sdl-free-wav (slot-value sample 'data)) 
+;	    (sdl-cffi::sdl-free-wav (slot-value sample 'data))  ; todo must free this ...
 	    (cffi:foreign-free audio-converter)
 	    (return-from load-and-convert-sample nil)))
 
@@ -194,7 +194,7 @@
 		
 	  ; free the old sample data
 
- 	  (cffi:foreign-free (slot-value sample 'data))
+; 	  (cffi:foreign-free (slot-value sample 'data)) ; todo must free this (but is it double free?)
 
    	  ; set the wave structure to represent the new sample
 
@@ -206,8 +206,8 @@
 
 (defun free-sample(sample)
   "free up the sample data"
-  (format t "sample ~a memory free ~a" (slot-value sample 'filename) (slot-value sample 'data))
-  (sdl-cffi::sdl-free-wav (slot-value sample 'data))) ; todo need to export free-wav
+  (format t "sample ~a memory free ~a" (slot-value sample 'filename) (slot-value sample 'data)))
+;  (sdl-cffi::sdl-free-wav (slot-value sample 'data))) ; todo need to export free-wav todo must free
 
 (defun allocate-desired-audiospec()
   "setup an audio spec as specified"
@@ -220,27 +220,30 @@
 	(obtained-audio-spec (cffi:foreign-alloc 'sdl-cffi::SDL-Audio-Spec)))
       
     ; set the mixer callback 
-    (setf (cffi:foreign-slot-value desired-audio-spec
-				   'sdl-cffi::sdl-audio-spec 'sdl-cffi::callback)
-	  (cffi:get-callback 'mixer-callback))
+     (setf (cffi:foreign-slot-value desired-audio-spec
+ 				   'sdl-cffi::sdl-audio-spec 'sdl-cffi::callback)
+ 	  (cffi:get-callback 'mixer-callback))
     
-    (let ((open-audio-result
-	   (sdl-cffi::SDL-Open-Audio desired-audio-spec obtained-audio-spec))
-	  (rstring
-	   (cffi:foreign-string-alloc "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz")))
+     (let ((open-audio-result
+	    (sdl-cffi::SDL-Open-Audio desired-audio-spec obtained-audio-spec))
+	   (rstring
+	    (cffi:foreign-alloc :unsigned-char :count 128)))
       
-      (if (< open-audio-result 0)
-	  (error "Open audio failed: ~a~%" (sdl-cffi::sdl-get-error)))
+       (if (< open-audio-result 0)
+	   (error "Open audio failed: ~a~%" (sdl-cffi::sdl-get-error)))
 
-      ; save the driver name
-      (setf (slot-value *playback-status* 'driver-name) (sdl-cffi::SDL-Audio-Driver-Name rstring 52))
+       ; save the driver name
+       (setf (slot-value *playback-status* 'driver-name) 
+	     (sdl-cffi::SDL-Audio-Driver-Name rstring 128))
 
-      ; a buffer to do the sound mixing in 
-      (setf (slot-value *playback-status* 'audio-buffer) (cffi:foreign-alloc :unsigned-char :count *audio-buffer-size*))
+       (format t "Driver name: ~a~%" (slot-value *playback-status* 'driver-name)))))
+;)))
+;;;       ; a buffer to do the sound mixing in 
+;;;       (setf (slot-value *playback-status* 'audio-buffer) (cffi:foreign-alloc :unsigned-char :count *audio-buffer-size*))
 
-      (setf (slot-value *playback-status* 'audio-spec) obtained-audio-spec)
+;;;       (setf (slot-value *playback-status* 'audio-spec) obtained-audio-spec)
       
-      (setf (slot-value *playback-status* 'initialised) t))))
+;;;       (setf (slot-value *playback-status* 'initialised) t))))
 
 (defun quit-audio()
   "Free up any sample data and clear the sample list, and close the SDL audio system down"
@@ -281,19 +284,22 @@
 
     (init-audio)
 
-    (format t "Opened audio. Driver : \"~a\"~%" (slot-value *playback-status* 'driver-name))
-    (debug-print-audio-spec (slot-value *playback-status* 'audio-spec))
+ ;   (format t "Opened audio. Driver : \"~a\"~%" (slot-value *playback-status* 'driver-name))
+ ;   (debug-print-audio-spec (slot-value *playback-status* 'audio-spec))
 
     ; open the example samples 
 
-    (load-sample sample1)
+;    (load-sample sample1)
 ;    (load-sample sample2)
 
 ;    (play-sound (first (slot-value *playback-status* 'samples)) t)
 
-    (sdl-cffi::SDL-Pause-Audio 0) ; unpause the audio
+ ;   (sdl-cffi::SDL-Pause-Audio 0) ; unpause the audio
 
     (sdl:with-events ()
+      (:key-down-event (:key key)
+		       (if (sdl:key= key :SDL-KEY-ESCAPE)
+			   (sdl:push-quit-event)))
       (:quit-event () t)
       (:idle ()
 	     (sdl:draw-pixel-* (random 200) (random 200)
@@ -302,8 +308,8 @@
 						 :b 0)
 			       :surface sdl:*default-display*)
 	     (sdl:update-display)))
-    
-    (quit-audio)))
+  ))  
+ ;   (quit-audio)))
 
 
 
