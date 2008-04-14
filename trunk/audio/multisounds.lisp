@@ -27,6 +27,31 @@
 
 (defparameter *playback-status* (make-playback-status))
 
+(let ((allocations nil))
+
+  (defun tracked-alloc(type &optional (count 1)) 
+    "Simple memory allocation with trace"
+    (let ((address (cffi:foreign-alloc type :count count)))
+      (format t "memtracker: allocated ~a of ~a at ~a~%" count type address)
+      (push address allocations)
+      address))
+
+  (defun tracked-free(pointer)
+    (format t "memtracker: free ~a~%" pointer)
+    (if (find pointer allocations :test 'equal)
+	(and 
+	 (cffi:foreign-free pointer)
+	 (setf allocations (remove pointer allocations :test 'equal)))
+	(format t "error: trying to free untracked memory ~a~%" pointer)))
+
+  (defun tracked-memory()
+    (format t "allocations:~%")
+    (dolist (item allocations)
+      (format t "  ~a~%" item)))
+
+  (defun tracked-memory-reset()
+    (setf allocations nil)))
+
 ; From On Lisp
 (defmacro while (test &body body)
   `(do ()
@@ -45,7 +70,7 @@
 ; void SDLCALL mixer-callback(void *unused, Uint8 *stream, int len)
 (cffi:defcallback mixer-callback :void ((unused :pointer) (stream :pointer) (len :int))
 
-  (return-from mixer-callback)
+;  (return-from mixer-callback)
 
   (let ((sound (first (slot-value *playback-status* 'sounds))))
     (if (null sound)
@@ -80,7 +105,7 @@
 ; allocate a SDL_AudioSpec with the specified parameters
 
 (defun allocate-sdl-audiospec(des-freq des-format des-samples des-callback des-userdata des-channels)
-  (let ((spec (cffi:foreign-alloc 'sdl-cffi::SDL-Audio-Spec)))
+  (let ((spec (tracked-alloc 'sdl-cffi::SDL-Audio-Spec)))
     (cffi:with-foreign-slots ((sdl-cffi::freq 
 			       sdl-cffi::format 
 			       sdl-cffi::samples 
@@ -115,12 +140,10 @@
 (defun load-and-convert-sample(filename dest-spec)
   "loads the wav file, converts it to the dest-spec"
 
-  ; todo create the format converter, run it and free the original data
-
   (let* ((sample (make-sample :filename filename
-			      :audio-spec (cffi:foreign-alloc 'sdl-cffi::SDL-Audio-Spec)
-			      :data (cffi:foreign-alloc :pointer)
-			      :len (cffi:foreign-alloc :unsigned-int)))
+			      :audio-spec (tracked-alloc 'sdl-cffi::SDL-Audio-Spec)
+			      :data (tracked-alloc :pointer)
+			      :len (tracked-alloc :unsigned-int)))
 	 (loaded-wav-spec 
 	  (with-slots (filename audio-spec data len) sample
 	    (sdl-cffi::sdl-load-wav filename audio-spec data len))))
@@ -135,7 +158,7 @@
 
     ; build the audio converter
 
-    (let* ((audio-converter (cffi:foreign-alloc 'sdl-cffi::SDL-Audio-CVT))
+    (let* ((audio-converter (tracked-alloc 'sdl-cffi::SDL-Audio-CVT))
 	   (build-converter-result 
 	    (sdl-cffi::SDL-Build-Audio-CVT audio-converter 
 		     ; source format params			   
@@ -150,7 +173,8 @@
       (if (< build-converter-result 0)
 	  (progn
 ;	    (sdl-cffi::sdl-free-wav (slot-value sample 'data))  ; todo must free this ...
-	    (cffi:foreign-free audio-converter)
+	    (format t "unable to build sample converter~%")
+	    (tracked-free audio-converter)
 	    (return-from load-and-convert-sample nil)))
 
       ; sample now loaded, convert built, we need to do the conversion
@@ -161,8 +185,7 @@
 			     (cffi:foreign-slot-value audio-converter 
 						      'sdl-cffi::SDL-Audio-CVT 'sdl-cffi::len-mult)))
 	     (sample-buffer
-	      (cffi:foreign-alloc :unsigned-char
-				  :count buffer-size)))
+	      (tracked-alloc :unsigned-char buffer-size)))
 
 	(format t "buffer ~a buffer size ~a original ~a~%" sample-buffer buffer-size (slot-value sample 'len))
 	
@@ -194,7 +217,7 @@
 		
 	  ; free the old sample data
 
-; 	  (cffi:foreign-free (slot-value sample 'data)) ; todo must free this (but is it double free?)
+ 	  (tracked-free (slot-value sample 'data)) ; todo must free this (but is it double free?)
 
    	  ; set the wave structure to represent the new sample
 
@@ -209,17 +232,16 @@
   (format t "sample ~a memory free ~a" (slot-value sample 'filename) (slot-value sample 'data)))
 ;  (sdl-cffi::sdl-free-wav (slot-value sample 'data))) ; todo need to export free-wav todo must free
 
-(defun allocate-desired-audiospec()
-  "setup an audio spec as specified"
-  (allocate-sdl-audiospec 44100 sdl-cffi::AUDIO-S16LSB *audio-buffer-size* (cffi:get-callback 'mixer-callback) 
-			  (cffi:null-pointer) 2))
-
 (defun init-audio()
   "open audio device"
-  (let ((desired-audio-spec (allocate-desired-audiospec))
-	(obtained-audio-spec (cffi:foreign-alloc 'sdl-cffi::SDL-Audio-Spec)))
+  
+  (let ((desired-audio-spec 
+	 (allocate-sdl-audiospec 44100 sdl-cffi::AUDIO-S16LSB *audio-buffer-size* 
+				 (cffi:get-callback 'mixer-callback) 
+				 (cffi:null-pointer) 2))
+	(obtained-audio-spec (tracked-alloc 'sdl-cffi::SDL-Audio-Spec)))
       
-    ; set the mixer callback 
+     ; set the mixer callback 
      (setf (cffi:foreign-slot-value desired-audio-spec
  				   'sdl-cffi::sdl-audio-spec 'sdl-cffi::callback)
  	  (cffi:get-callback 'mixer-callback))
@@ -227,7 +249,7 @@
      (let ((open-audio-result
 	    (sdl-cffi::SDL-Open-Audio desired-audio-spec obtained-audio-spec))
 	   (rstring
-	    (cffi:foreign-alloc :unsigned-char :count 128)))
+	    (tracked-alloc :unsigned-char 128)))
       
        (if (< open-audio-result 0)
 	   (error "Open audio failed: ~a~%" (sdl-cffi::sdl-get-error)))
@@ -236,14 +258,16 @@
        (setf (slot-value *playback-status* 'driver-name) 
 	     (sdl-cffi::SDL-Audio-Driver-Name rstring 128))
 
-       (format t "Driver name: ~a~%" (slot-value *playback-status* 'driver-name)))))
-;)))
-;;;       ; a buffer to do the sound mixing in 
-;;;       (setf (slot-value *playback-status* 'audio-buffer) (cffi:foreign-alloc :unsigned-char :count *audio-buffer-size*))
+       (tracked-free rstring)
 
-;;;       (setf (slot-value *playback-status* 'audio-spec) obtained-audio-spec)
+       ; a buffer to do the sound mixing in 
+       (setf (slot-value *playback-status* 'audio-buffer) (tracked-alloc :unsigned-char *audio-buffer-size*))
+
+       (setf (slot-value *playback-status* 'audio-spec) obtained-audio-spec)
       
-;;;       (setf (slot-value *playback-status* 'initialised) t))))
+       (setf (slot-value *playback-status* 'initialised) t)
+
+       (tracked-free desired-audio-spec))))
 
 (defun quit-audio()
   "Free up any sample data and clear the sample list, and close the SDL audio system down"
@@ -252,7 +276,10 @@
   (setf (slot-value *playback-status* 'samples) nil)
 
   (sdl-cffi::SDL-Close-Audio)
-  (setf (slot-value *playback-status* 'initialised) nil))
+  (setf (slot-value *playback-status* 'initialised) nil)
+
+  (tracked-free (slot-value *playback-status* 'audio-buffer))
+  (tracked-free (slot-value *playback-status* 'audio-spec)))
 
 (defun load-sample(filename)
   "load a sample file, convert it to the current audio spec, and add it to the sample list"
@@ -268,8 +295,8 @@
     (push sound (slot-value *playback-status* 'sounds))))
 
 (defun testms()
-; (multisounds "/home/justinhj/sounds/trance_02_05.WAV" "/home/justinhj/sounds/trance_06_04.WAV"))
-  (multisounds "/home/justinhj/sounds/test.wav" "/home/justinhj/sounds/test.wav"))
+ (multisounds "/home/justinhj/sounds/trance_02_05.WAV" "/home/justinhj/sounds/trance_06_04.WAV"))
+;  (multisounds "/home/justinhj/sounds/test.wav" "/home/justinhj/sounds/test.wav"))
 
 (defun multisounds(sample1 sample2)
   (sdl:with-init (sdl:sdl-init-video sdl:sdl-init-audio)
@@ -277,24 +304,24 @@
     (sdl:window 200 200)
     (setf (sdl:frame-rate) 60)
 
-;    (sdl::set-sdl-quit-on-exit t) 
+    (sdl::set-sdl-quit-on-exit t) 
 
     ; lispworks - need this to enable callbacks from foreign code into lisp
     #+lispworks (sys:setup-for-alien-threads)
 
     (init-audio)
 
- ;   (format t "Opened audio. Driver : \"~a\"~%" (slot-value *playback-status* 'driver-name))
- ;   (debug-print-audio-spec (slot-value *playback-status* 'audio-spec))
+    (format t "Opened audio. Driver : \"~a\"~%" (slot-value *playback-status* 'driver-name))
+    (debug-print-audio-spec (slot-value *playback-status* 'audio-spec))
 
     ; open the example samples 
 
-;    (load-sample sample1)
+    (load-sample sample1)
 ;    (load-sample sample2)
 
-;    (play-sound (first (slot-value *playback-status* 'samples)) t)
+    (play-sound (first (slot-value *playback-status* 'samples)) t)
 
- ;   (sdl-cffi::SDL-Pause-Audio 0) ; unpause the audio
+    (sdl-cffi::SDL-Pause-Audio 0) ; unpause the audio
 
     (sdl:with-events ()
       (:key-down-event (:key key)
@@ -308,8 +335,7 @@
 						 :b 0)
 			       :surface sdl:*default-display*)
 	     (sdl:update-display)))
-  ))  
- ;   (quit-audio)))
+   (quit-audio)))
 
 
 
