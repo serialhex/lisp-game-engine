@@ -1,6 +1,6 @@
 ; An SDL audio mixer
 
-(declaim (optimize (debug 2) (safety 2) (speed 1)))
+(declaim (optimize (debug 3) (safety 2) (speed 1)))
 
 (defstruct playback-status
   initialised
@@ -39,17 +39,21 @@
   (defun tracked-free(pointer)
     (format t "memtracker: free ~a~%" pointer)
     (if (find pointer allocations :test 'equal)
-	(and 
-	 (cffi:foreign-free pointer)
-	 (setf allocations (remove pointer allocations :test 'equal)))
-	(format t "error: trying to free untracked memory ~a~%" pointer)))
+	(progn
+	  (cffi:foreign-free pointer)
+	  (setf allocations (remove pointer allocations :test 'equal)))
+	(format t "memtracker: warning! trying to free untracked memory ~a~%" pointer)))
 
   (defun tracked-memory()
     (format t "allocations:~%")
     (dolist (item allocations)
       (format t "  ~a~%" item)))
 
+  (defun tracked-memory-allocations()
+    allocations)
+
   (defun tracked-memory-reset()
+    (mapcar #'tracked-free allocations)
     (setf allocations nil)))
 
 ; From On Lisp
@@ -63,25 +67,24 @@
 ; there's no bounds checking, this is only for use when you know
 ; exactly what you're copying
 (defun my-memcpy(dst src num)
-  (loop for b from 0 to (1- num) do 
-       (setf (cffi:mem-aref dst :unsigned-char b) (cffi:mem-aref src :unsigned-char b))))
+  (loop for i from 0 to (1- num) do 
+       (setf (cffi:mem-aref dst :unsigned-char i) (cffi:mem-aref src :unsigned-char i))))
 
 ; Define callback function for managing the audio buffer
 ; void SDLCALL mixer-callback(void *unused, Uint8 *stream, int len)
 (cffi:defcallback mixer-callback :void ((unused :pointer) (stream :pointer) (len :int))
 
-;  (return-from mixer-callback)
-
   (let ((sound (first (slot-value *playback-status* 'sounds))))
+
     (if (null sound)
 	(return-from mixer-callback))
 
     (let* ((sample (slot-value sound 'sample))
-	  (waveptr (cffi:inc-pointer 
-		    (slot-value sample 'data)
-		    (slot-value sample 'pos))) ; pointer into sound data at play pos
-	  (waveleft (- (slot-value sample 'len)
-		       (slot-value sample 'pos)))) ; how much sound left
+	   (waveptr (cffi:inc-pointer 
+		     (slot-value sample 'data)
+		     (slot-value sound 'pos))) ; pointer into sound data at play pos
+	   (waveleft (- (slot-value sample 'len)
+			(slot-value sound 'pos)))) ; how much sound left
 
       (while (<= waveleft len) ; while enough sound to fill len bytes of the audio stream buffer
 	
@@ -95,12 +98,12 @@
         ; reset the sound pointer to point at the beginning
 	(setf waveptr (slot-value sample 'data)) 
 	(setf waveleft (slot-value sample 'len))
-	(setf (slot-value sample 'pos) 0))
+	(setf (slot-value sound 'pos) 0))
 
       ; at this point we have more than enough sound, so just copy len bytes of it
       ; and increment the playing sounds position by len
       (sdl-cffi::SDL-Mix-Audio stream waveptr len sdl-cffi::SDL-MIX-MAXVOLUME)
-      (incf (slot-value sample 'pos) len))))
+      (incf (slot-value sound 'pos) len))))
 
 ; allocate a SDL_AudioSpec with the specified parameters
 
@@ -187,7 +190,8 @@
 	     (sample-buffer
 	      (tracked-alloc :unsigned-char buffer-size)))
 
-	(format t "buffer ~a buffer size ~a original ~a~%" sample-buffer buffer-size (slot-value sample 'len))
+	(format t "buffer ~a buffer size ~a original ~a data ~a~%" sample-buffer buffer-size 
+		(slot-value sample 'len) (slot-value sample 'data))
 	
 	(setf (cffi:foreign-slot-value audio-converter 'sdl-cffi::SDL-Audio-CVT 'sdl-cffi::buf) sample-buffer)
 
@@ -196,6 +200,13 @@
 	(setf (cffi:foreign-slot-value audio-converter 'sdl-cffi::SDL-Audio-CVT 'sdl-cffi::len) (slot-value sample 'len))
 
         ; memcpy(wav_cvt.buf, wav_buf, wav_len);
+
+	; test the source buffer ...
+	(let ((sum 0))
+	  (loop for i from 0 to (1- (slot-value sample 'len)) do
+	       (incf sum (cffi:mem-aref (slot-value sample 'data) :unsigned-char i)))
+	  (format t "sum ~a~%" sum))
+	     
 
 	; copy the source sample to the new buffer
 	(my-memcpy sample-buffer
@@ -217,7 +228,7 @@
 		
 	  ; free the old sample data
 
- 	  (tracked-free (slot-value sample 'data)) ; todo must free this (but is it double free?)
+ 	  (tracked-free (slot-value sample 'data))
 
    	  ; set the wave structure to represent the new sample
 
@@ -229,8 +240,7 @@
 
 (defun free-sample(sample)
   "free up the sample data"
-  (format t "sample ~a memory free ~a" (slot-value sample 'filename) (slot-value sample 'data)))
-;  (sdl-cffi::sdl-free-wav (slot-value sample 'data))) ; todo need to export free-wav todo must free
+  (tracked-free (slot-value sample 'data)))
 
 (defun init-audio()
   "open audio device"
@@ -295,8 +305,7 @@
     (push sound (slot-value *playback-status* 'sounds))))
 
 (defun testms()
- (multisounds "/home/justinhj/sounds/trance_02_05.WAV" "/home/justinhj/sounds/trance_06_04.WAV"))
-;  (multisounds "/home/justinhj/sounds/test.wav" "/home/justinhj/sounds/test.wav"))
+  (multisounds "/home/justinhj/sounds/lidup.wav" "/home/justinhj/sounds/liddown.wav"))
 
 (defun multisounds(sample1 sample2)
   (sdl:with-init (sdl:sdl-init-video sdl:sdl-init-audio)
@@ -335,8 +344,11 @@
 						 :b 0)
 			       :surface sdl:*default-display*)
 	     (sdl:update-display)))
-   (quit-audio)))
+   (quit-audio)
 
+   (format t "cleaning up memory use~%")
+   (tracked-memory-reset)
+   (tracked-memory)))
 
 
 
