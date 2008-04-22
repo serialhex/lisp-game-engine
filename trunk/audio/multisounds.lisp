@@ -140,8 +140,19 @@
 	    sdl-cffi::callback
 	    sdl-cffi::userdata)))
 
+(defun load-sample(filename)
+  "load a sample file, convert it to the current audio spec, and add it to the sample list"
+
+  (if (slot-value *playback-status* 'initialised)
+      (push 
+       (load-and-convert-sample filename (slot-value *playback-status* 'audio-spec))
+       (slot-value *playback-status* 'samples))
+      (error "you must call init-audio before loading samples")))
+
 (defun load-and-convert-sample(filename dest-spec)
   "loads the wav file, converts it to the dest-spec"
+
+  (format "buggy sample loader ~a~%" filename)
 
   (let* ((sample (make-sample :filename filename
 			      :audio-spec (tracked-alloc 'sdl-cffi::SDL-Audio-Spec)
@@ -290,15 +301,6 @@
 
   (tracked-free (slot-value *playback-status* 'audio-buffer))
   (tracked-free (slot-value *playback-status* 'audio-spec)))
-
-(defun load-sample(filename)
-  "load a sample file, convert it to the current audio spec, and add it to the sample list"
-
-  (if (slot-value *playback-status* 'initialised)
-      (push 
-       (load-and-convert-sample filename (slot-value *playback-status* 'audio-spec))
-       (slot-value *playback-status* 'samples))
-      (error "you must call init-audio before loading samples")))
 
 (defun play-sound(sample &optional (looping nil))
   (let ((sound (make-sound :sample sample :pos 0 :loop looping)))
