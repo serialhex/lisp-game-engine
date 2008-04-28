@@ -218,7 +218,7 @@ locate it correctly horizontally"
 			     :collide-type 'paddle))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def left-bat-sprite :current-frame 'frame-1
-			     :speed 8.0)) ; frames per second
+			     :speed 2.0)) ; frames per second
 	(pong (make-instance 'player-paddle-logic
 			     :control-type 'human-keyboard
 			     :side 'left))
@@ -228,6 +228,7 @@ locate it correctly horizontally"
     (add-component obj anim)
     (add-component obj pong)
     obj))
+
 
 (defun make-text-object(string x y justification color &optional name)
   "constructs an object with a text and physics components

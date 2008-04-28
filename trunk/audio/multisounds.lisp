@@ -85,7 +85,7 @@
 	   (waveleft (- (slot-value sample 'len)
 			(slot-value sound 'pos)))) ; how much sound left
 
-      (while (<= waveleft len) ; while enough sound to fill len bytes of the audio stream buffer
+      (while (<= waveleft len) ; if there's less wave left or exactly enough just send that and handle looping
 	
         ; send all the audio data you can
 	(sdl-cffi::SDL-Mix-Audio stream waveptr waveleft sdl-cffi::SDL-MIX-MAXVOLUME)
@@ -95,8 +95,7 @@
 	(decf len waveleft) ; reduce the amount of data we still need to write
 
         ; reset the sound pointer to point at the beginning if looping
-
-	(if (slot-value sound 'loop)
+        (if (slot-value sound 'loop)
 	    (progn
 	      (setf waveptr (slot-value sample 'data)) 
 	      (setf waveleft (slot-value sample 'len))
@@ -218,12 +217,6 @@
 
         ; memcpy(wav_cvt.buf, wav_buf, wav_len);
 
-	; test the source buffer ...
-;	(let ((sum 0))
-;	  (loop for i from 0 to (1- (slot-value sample 'len)) do
-;	       (incf sum (cffi:mem-aref (slot-value sample 'data) :unsigned-char i)))
-;	  (format t "sum ~a~%" sum))
-	
 	; copy the source sample to the new buffer
 	(my-memcpy sample-buffer
 		   (slot-value sample 'data)
@@ -316,6 +309,9 @@
 
 (defun testms()
   (multisounds "/home/justinhj/sounds/lidup.wav" "/home/justinhj/sounds/liddown.wav"))
+
+(defun testms2()
+  (multisounds "/home/justinhj/sounds/hello.wav" "/home/justinhj/sounds/trance_02_04.wav"))
 
 (defun multisounds(sample1 sample2)
   (sdl:with-init (sdl:sdl-init-video sdl:sdl-init-audio)
