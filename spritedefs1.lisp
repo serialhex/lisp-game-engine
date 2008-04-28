@@ -26,7 +26,8 @@
 ;;;; New pong sprites
 
 (defparameter left-bat-frames
-  (list (sprites::make-sprite-def-frame :name 'frame-1 :x1 135 :y1 55 :x2 151 :y2 103)))
+  (list (sprites::make-sprite-def-frame :name 'frame-1 :x1 135 :y1 55 :x2 151 :y2 103)
+	(sprites::make-sprite-def-frame :name 'frame-2 :x1 157 :y1 55 :x2 173 :y2 103)))
 
 (defparameter right-bat-frames
   (list (sprites::make-sprite-def-frame :name 'frame-1 :x1 184 :y1 55 :x2 200 :y2 103)))
