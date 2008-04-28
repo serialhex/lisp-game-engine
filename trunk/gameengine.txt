@@ -1,35 +1,20 @@
-##############################################
-
-Notes on lisp game engine
-
-##############################################
-
+Lisp game engine - todo list
 (C) 2008 Justin Heyes-Jones
-
-##############################################
 
 TODO
 
-Most of the TODO list is bollocks
+VHIGH More functions to iterate over components more efficiently
 
-Current probably not bollocks
+HIGH Find components and objects of name
 
-More functions to iterate over components more efficiently
-Find components and objects of name
+MED Multiple components of same type in an object
 
-Multiple components of same type in an object
-
-Tree of objects? eg the menu system could all be one object?
-
-
-End of current
+MED Tree of objects? eg the menu system could all be one object?
 
 VHIGH remove the parameter from 'update event. The game will be able
 to specify a list of messages that are sent every frame, but these
 will not have arguments. The only useful argument is frame delta, and
 that is globally available.
-
-This lets me do the game update as a list of message types.
 
 VHIGH WIP Pong prototype
 
@@ -39,45 +24,16 @@ VHIGH WIP Pong prototype
 
             the window needs to know what the camera offset is 
 
-X      player 1 and 2
-X      AI
-X	needs to get ball trajectory 
-MED       bug
-
-      scoring
-
-      game ending 
-
-WIP      game menu - choose players and AI 
-   
-
-      bonus modes, lots of balls.
+LOW      bonus modes, lots of balls.
       
-X Design for more than one level 
-
 HIGH (performance related) Global object list
       Some way to have collision system run through all physics 
       components and process all collision
       Needs to be done outside of current update loop
 
-possibly collapse these two
-
-HIGH Better way to send messages to everything (or rather not 
-      send them to everything)
-
 MED Object factory
       Able to create instances of objects from a text or DSL spec
       Instances share data if possible
-
-X HIGH Decent solution to state machine
-
-  This is just a component with a state symbol surely.
-
-HIGH More interactive programming capabilities
-
-X     split engine into init, run and quit
-       run engine as a process in various capable cl's
-       need to do deferred adding and deleting of objects midframe though
 
 MED Drawing must be deferred so you can sort, do layers and so on
 
@@ -87,31 +43,5 @@ MED Drawing must be deferred so you can sort, do layers and so on
 
 	Could be macro
 
-X component and message passing design
-
-X Game component or high level object 
-
-	x Has the active object list
-	x Objects can be active for update and draw
-
-X Level
-
-x	     Store objects
-x	     Insert them to the active object list
-HIGH	     Reset them to beginning values
-x	     Remove its objects from the active list
-HIGH	     Persist some objects to the next level
-
-X		objects that are listening for this type
-
-Physics
-
-	Detect collisions (need world representation)
-	message to colliding objects
-
-
-DONE
-
-Input system - key timing (time held and so on. key pressed)
-
+HIGH Sound - using my stuff or SDL_Mixer
 
