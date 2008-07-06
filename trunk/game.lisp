@@ -1,4 +1,3 @@
-
 ;;;; Code which manages games and levels
 
 (defclass level()

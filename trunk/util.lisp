@@ -83,10 +83,10 @@
 ;;;; todo this should go somewhere that should know about screen width and height
 
 (defun sx(x)
-  (integer-in-range x 0 640))
+  (integer-in-range x 0 *WINDOW-WIDTH*))
 
 (defun sy(y)
-  (integer-in-range y 0 480))
+  (integer-in-range y 0 *WINDOW-HEIGHT*))
 
 ;;;; random unique name
 

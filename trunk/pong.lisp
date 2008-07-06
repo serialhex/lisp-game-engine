@@ -4,13 +4,13 @@
 
 ;; some data for pong 
 
-(defparameter *paddle-side-offset* 50.0)
+(defvar *paddle-side-offset* 50.0)
 
 ;(defparameter *paddle-hoz-offset* 30.0)
 ;(defparameter *paddle-left-offset* *paddle-hoz-offset*)
-;(defparameter *paddle-right-offset* (- 640 70))
+;(defparameter *paddle-right-offset* (- *WINDOW-WIDTH* 70))
 
-(defparameter *paddle-start-y* (/ 480 2))
+(defvar *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
 
 ;; the pong game subclass the game object to make your game
 ;; this is not a composite-object or a component
@@ -86,7 +86,7 @@
 
 (defun reflect-off-screen-y-to-screen(y height)
   "allows for size of ball"
-  (let ((edge (- 480 height)))
+  (let ((edge (- *WINDOW-HEIGHT* height)))
     (if (< y 0)
 	(- y)
 	(if (>= y edge)
@@ -127,7 +127,7 @@ locate it correctly horizontally"
   (with-slots (x width) physics
     (if (equal (slot-value paddle-logic 'side) 'left)
 	(setf x *paddle-side-offset*)
-	(setf x (- 640 1 width *paddle-side-offset*)))))
+	(setf x (- *WINDOW-WIDTH* 1 width *paddle-side-offset*)))))
 
 (defmethod handle-message((comp player-paddle-logic) message-type &rest rest)  
   (let ((owner (slot-value comp 'owner)))
@@ -190,7 +190,7 @@ locate it correctly horizontally"
 		 (setf y (screen-center-y))
 		 (setf pause 3.0)))
 	     
-	     (when (> (+ x width) (+ 20 639))
+	     (when (> (+ x width) (+ 20 (1- *WINDOW-WIDTH*)))
 	       (progn
 		 (handle-message (engine-get-game) 'left-scored)
 		 (setf vx 0.0)
@@ -204,7 +204,7 @@ locate it correctly horizontally"
 	     (when (< y 0)
 	       (setf vy (abs vy)))
 	     
-	     (when (> (+ y height) 479)
+	     (when (> (+ y height) (1- *WINDOW-HEIGHT*))
 	       (setf vy (* -1 (abs vy))))
 
 	     ; on collision with player 
@@ -259,7 +259,7 @@ and the specified text properties"
 
 (defun make-ball()
   (let ((phys (make-instance '2d-physics
-			     :x (random-range 0.0 640.0) :y (random-range 0.0 480.0) 
+			     :x (random-range 0.0 *WINDOW-WIDTH*) :y (random-range 0.0 *WINDOW-HEIGHT*) 
 			     :vx (random-range 4.0 10.0) :vy (random-range -8.0 8.0)
 			     :collide-type 'ball
 			     :collide-with-types '(paddle left-goal right-goal wall)))
@@ -341,7 +341,7 @@ and the specified text properties"
 (defun score-x-position(side)
   (if (eq side 'left)
       20
-      (- 640 20)))
+      (- *WINDOW-WIDTH* 20)))
 
 (defun score-text-justify(side)
   (if (eq side 'left)
@@ -383,6 +383,12 @@ and the specified text properties"
     (game-add-level game (make-game-over-level))
     (engine-set-game game)))
 
+(defun play-pong()
+	   (engine-init :window-height 480 :window-width 640 :full-screen-p t)
+	   (make-pong)
+	   (engine-run)
+	   (engine-quit)
+	   (setf *FULL-SCREEN-P* nil))
 
 
 

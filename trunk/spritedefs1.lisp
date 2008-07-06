@@ -1,7 +1,9 @@
-;;;; Sprite defs for walking
-; a sprite def tells the game everything it needs to know about a sprite. what file it comes
-; from, what the transparent colour is, and a set of numbered or named frames with x1y1 and  
-; x2y2settings (ie where it starts and where it ends on the image)
+; Sprite defs
+;
+; A sprite def tells the engine everything it needs to know about a sprite. 
+; What bmp file it comes from, what the transparent colour is, and a set of 
+; numbered or named frames with x1y1 and x2y2settings (ie where it starts 
+; and where it ends on the image)
 
 (defparameter waddle-frames
   (list 
