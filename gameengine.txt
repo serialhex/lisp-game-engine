@@ -1,20 +1,15 @@
-Lisp game engine - todo list
+Interactive Game Engine
 (C) 2008 Justin Heyes-Jones
 
 TODO
 
-VHIGH More functions to iterate over components more efficiently
+VHIGH game must tell engine which messages to do each frame, messages are game specific
 
-HIGH Find components and objects of name
+VHIGH iterate over components more efficiently
+
+VHIGH lose the globals from engine, replace with engine struct
 
 MED Multiple components of same type in an object
-
-MED Tree of objects? eg the menu system could all be one object?
-
-VHIGH remove the parameter from 'update event. The game will be able
-to specify a list of messages that are sent every frame, but these
-will not have arguments. The only useful argument is frame delta, and
-that is globally available.
 
 VHIGH WIP Pong prototype
 
@@ -22,26 +17,25 @@ VHIGH WIP Pong prototype
 
       need a logical play area for pong (score and so on separate)
 
-            the window needs to know what the camera offset is 
+      the window needs to know what the camera offset is 
 
 LOW      bonus modes, lots of balls.
       
-HIGH (performance related) Global object list
-      Some way to have collision system run through all physics 
-      components and process all collision
-      Needs to be done outside of current update loop
-
 MED Object factory
       Able to create instances of objects from a text or DSL spec
       Instances share data if possible
+      Be able to reset data to initial values
 
 MED Drawing must be deferred so you can sort, do layers and so on
 
 	Draw instructions not operations
-
 	Instruction structure? should be just the exact same draw call but deferred
-
 	Could be macro
 
 HIGH Sound - using my stuff or SDL_Mixer
+     My stuff sucks
+     SDL mixer is unstable
+     Best option is to use SDL_Mixer but allow it to be unused during dev
+
+
 

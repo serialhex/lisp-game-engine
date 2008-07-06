@@ -1,19 +1,18 @@
-;;;; A component based, data driven, interactive game engine
-; (C)2008 Justin Heyes-Jones
+;;;; IGE - Interactive Game Engine
+;;;; An object oriented compoment based, data driven multimedia framework
+;;;; (C)2008 Justin Heyes-Jones
 
 (in-package :cl-user)  
 
-; Window or screen height and screen mode (full screen or not)
-; Note that these are set up with defparameter which creates
-; variables with global extent, and will reset them if you reload.
-; Using defvar here would enable you to keep the existing values
-; on reloads if you wanted that behaviour instead.
-(defparameter *WINDOW-WIDTH* 640)
-(defparameter *WINDOW-HEIGHT* 480)
-(defparameter *FULL-SCREEN-P* nil) ; unused
-(defparameter *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44))
+; Set up global vars used throughout the engine
+
+(defvar *WINDOW-WIDTH* 640 "Width of window")
+(defvar *WINDOW-HEIGHT* 480 "Height of window")
+(defvar *FULL-SCREEN-P* nil "Whether or not this is a full screen application") 
+(defvar *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44) "Screen is filled with this color each frame")
 
 ; Set the default bitmap path
+; TODO this should be a variable in the engine
 #-unix(defparameter *bmp-path* nil)
 #+unix(defparameter *bmp-path* "/home/justinhj/lisp-game-engine/")
 
@@ -23,7 +22,7 @@
 (defparameter *engine-active* nil 
   "Monitors the status of the engine to ensure init and quit correct use")
 
-;;;; Game/Media systems - all games can use these
+;;;; Game/Audio and graphics systems - all games can use these
 (load "util")
 (load "sprites") ; sprite drawing, animation and file handling
 (load "input") ; joystick, mouse and keyboard
@@ -35,22 +34,34 @@
 
 ;;;; Game specific data - eventually this should be elsewhere
 
-(load "pong") ; components and code for being a pong game
+(defun engine-get-window-flags(full-screen-p)
+  "return appropriate window flags depending on full screen or not"
+  (let ((flags sdl-cffi::SDL-SW-SURFACE))
+    (if full-screen-p
+	(logior flags sdl-cffi::SDL-FULLSCREEN)
+	flags)))
 
-(defun engine-init()
+(defun engine-init(&key
+		   (window-width *WINDOW-WIDTH*)
+		   (window-height *WINDOW-HEIGHT*)
+		   (full-screen-p *FULL-SCREEN-P*))
   "sets up the game engine and returns"
   (if *engine-active*
       (error "engine-init was already called"))
+  ; copy user params to globals
+  (setf *WINDOW-HEIGHT* window-height)
+  (setf *WINDOW-WIDTH* window-width)
+  (setf *FULL-SCREEN-P* full-screen-p)
+  ; init game engine
   (sdl:init-sdl)  
   (sdl:init-sub-systems)
   (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
-  ;;; TODO handle full screen here
-  (sdl:window *WINDOW-WIDTH* *WINDOW-HEIGHT* 
+  (sdl:window window-width window-height 
+	      :flags (engine-get-window-flags full-screen-p)
 	      :title-caption "Game engine" :icon-caption "Game engine")
-  ;;; init other stuff we want available
   (sdl:initialise-default-font)
-  (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
-  (input:initialise)
+  (input:initialise) 
+  (setf (sdl:frame-rate) 60) 
   (setf *engine-active* t))
 
 (defun engine-quit()
@@ -75,7 +86,6 @@
       (error "engine-init was not called"))
   (sdl:with-events  ()
     (:quit-event () t)
-    ; todo replace this with a simple input system
     (:key-down-event (:key key)
 		     (input:handle-key-down key)
 		     (if (sdl:key= key :SDL-KEY-ESCAPE)
@@ -98,7 +108,9 @@
 
 (defun engine-update-game()
   "Update the current game"
-  (game-update *engine-game*))
+  (when *engine-game*
+    (game-update *engine-game*)))
+
 
 
    
