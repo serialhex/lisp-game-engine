@@ -1,19 +1,17 @@
+********************************************************************************
 Interactive Game Engine
 (C) 2008 Justin Heyes-Jones
+********************************************************************************
 
+********************************************************************************
 TODO
+********************************************************************************
 
-VHIGH game must tell engine which messages to do each frame, messages are game specific
-
-VHIGH iterate over components more efficiently
-
-VHIGH lose the globals from engine, replace with engine struct
+VHIGH iterate over components more efficiently - need to add components to a list, one for each type
 
 MED Multiple components of same type in an object
 
 VHIGH WIP Pong prototype
-
-      need to parameterise screen height, width etc playfield and camera
 
       need a logical play area for pong (score and so on separate)
 
@@ -21,10 +19,10 @@ VHIGH WIP Pong prototype
 
 LOW      bonus modes, lots of balls.
       
-MED Object factory
-      Able to create instances of objects from a text or DSL spec
+MED Object creation
+      Able to create instances of objects from a text or DSL spec, or gui
       Instances share data if possible
-      Be able to reset data to initial values
+HIGH      Be able to reset data to initial values
 
 MED Drawing must be deferred so you can sort, do layers and so on
 
@@ -36,6 +34,24 @@ HIGH Sound - using my stuff or SDL_Mixer
      My stuff sucks
      SDL mixer is unstable
      Best option is to use SDL_Mixer but allow it to be unused during dev
+
+********************************************************************************
+Done
+********************************************************************************
+
+VHIGH game must tell engine which messages to do each frame, messages are game specific
+(now each level has its own update and can send messages in any order, of any type. however, 
+components shared between apps must be take into account what the expectations are in terms
+of draw, update and so on)
+
+VHIGH lose the globals from engine, replace with engine struct
+(level and game now encapsulate game state. engine just has a reference to the curent game)
+
+PONG  need to parameterise screen height, width etc playfield and camera
+
+
+
+
 
 
 
