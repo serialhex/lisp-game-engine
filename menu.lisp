@@ -61,7 +61,8 @@
 (defun make-menu-item(text x y justification action default-color selected-color)
   "returns a menu item made up of a text object and a menu component"
   (let ((menu-item (make-text-object text x y justification default-color)))
-    (add-component menu-item (make-instance 'menu-item :action action :default-color default-color :selected-color selected-color))
+    (add-component menu-item (make-instance 'menu-item :action action 
+					    :default-color default-color :selected-color selected-color))
     menu-item))
 
 (defun menu-set-prev-next(list-of-menu-objects &optional (wrap-p nil))

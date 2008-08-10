@@ -1,6 +1,6 @@
 ;;;; components needed to play pong
 
-(load "spritedefs1") ; sample sprite definitions
+(load "pongspritedefs") ; 
 
 ;; some data for pong 
 
@@ -384,11 +384,13 @@ and the specified text properties"
     (engine-set-game game)))
 
 (defun play-pong()
-	   (engine-init :window-height 480 :window-width 640 :full-screen-p t)
+	   (engine-init :window-height 480 :window-width 640 :full-screen-p nil)
 	   (make-pong)
 	   (engine-run)
 	   (engine-quit)
 	   (setf *FULL-SCREEN-P* nil))
+
+
 
 
 
