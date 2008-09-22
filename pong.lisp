@@ -2,6 +2,15 @@
 
 (load "pongspritedefs") ; 
 
+; pong bugs
+
+; ball speed (need to launch at range of angles, same speed all the time)
+; rework collision so it works properly, not just reflect
+
+; pong feature ideas
+
+
+
 ;; some data for pong 
 
 (defvar *paddle-side-offset* 50.0)
@@ -218,7 +227,7 @@ locate it correctly horizontally"
 			     :collide-type 'paddle))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def left-bat-sprite :current-frame 'frame-1
-			     :speed 2.0)) ; frames per second
+			     :speed 5.0)) ; frames per second
 	(pong (make-instance 'player-paddle-logic
 			     :control-type 'human-keyboard
 			     :side 'left))
@@ -246,7 +255,7 @@ and the specified text properties"
 			     :collide-type 'paddle))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def right-bat-sprite :current-frame 'frame-1
-			     :speed 16.0)) ; frames per second
+			     :speed 5.0)) ; frames per second
 	(pong (make-instance 'player-paddle-logic
 			     :control-type 'ai-hard
 			     :side 'right))
@@ -265,7 +274,7 @@ and the specified text properties"
 			     :collide-with-types '(paddle left-goal right-goal wall)))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def ball-sprite :current-frame 'frame-1
-			     :speed 4.0))
+			     :speed 8.0))
 	(ball (make-instance 'ball-logic))
 	(obj (make-instance 'composite-object
 			    :name "ball")))
@@ -273,10 +282,6 @@ and the specified text properties"
     (add-component obj anim)
     (add-component obj ball)
     obj))
-
-
-(defun action-main-menu()
-  (format t "Main menu (todo)~%"))
 
 (defun action-do-something()
   (format t "do something !~%"))
@@ -383,8 +388,8 @@ and the specified text properties"
     (game-add-level game (make-game-over-level))
     (engine-set-game game)))
 
-(defun play-pong()
-	   (engine-init :window-height 480 :window-width 640 :full-screen-p nil)
+(defun play-pong(&optional (full-screen nil))
+	   (engine-init :window-height 480 :window-width 640 :full-screen-p full-screen)
 	   (make-pong)
 	   (engine-run)
 	   (engine-quit)
