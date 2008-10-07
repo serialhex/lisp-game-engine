@@ -1,30 +1,34 @@
 ;;;; components needed to play pong
 
-(load "pongspritedefs") ; 
-
 ; pong bugs
 
-; ball speed (need to launch at range of angles, same speed all the time)
+; quit game does not exit engine (bug?)
+
 ; rework collision so it works properly, not just reflect
 
-; pong feature ideas
+; ball prediction not working
 
+;; recent fixes
 
+; ball speed (need to launch at range of angles, same speed all the time)
 
 ;; some data for pong 
 
-(defvar *paddle-side-offset* 50.0)
+(load "pongspritedefs") ; 
 
-;(defparameter *paddle-hoz-offset* 30.0)
-;(defparameter *paddle-left-offset* *paddle-hoz-offset*)
-;(defparameter *paddle-right-offset* (- *WINDOW-WIDTH* 70))
+; parameters
 
-(defvar *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
+(defparameter *paddle-side-offset* 10.0 "How far from the edges the paddles are")
 
-;; the pong game subclass the game object to make your game
+(defparameter *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
+
+(defparameter *ball-serve-speed* 6.0)
+(defparameter *ball-serve-max-angle* (degs-rads 90.0))
+
+;; The pong game subclass the game object to make your game
 ;; this is not a composite-object or a component
 ;; it's a subclass of game, which has level management 
-;; you put your high level game logic in here.
+;; You put your high level game logic in here.
 ;; it's up to you what the game update does, but it should
 ;; at the very least update and draw the current level 
 ;; objects and components
@@ -128,7 +132,10 @@
 		   (sign (if (< target-y y) -1 1)))
 	      (setf vy (* sign 
 			  (min *hard-ai-paddle-speed*
-			       (abs (- target-y y)))))))))))
+			       (abs (- target-y y)))))
+	      ; debug
+	      (sdl:draw-pixel-* (- *WINDOW-WIDTH* 2) (floor target-y) :color (sdl:color :r 255 :g 255 :b 0))
+))))))
 
 (defun set-paddle-x-position(paddle-logic physics)
   "given a paddle logic component and its physics component
@@ -152,7 +159,8 @@ locate it correctly horizontally"
 	   ('ai-hard
 	    (do-hard-pong-ai-update owner comp phys))
 	   ('human-keyboard
-             ; basic input 
+             ; basic input - the up down arrows move the paddle
+	     ; which moves more rapidly the longer the key is held
 	    (setf (slot-value phys 'vy) 0.0)
 	    (when (input:key-held-p :SDL-KEY-UP)
 	      (setf (slot-value phys 'vy) 
@@ -167,6 +175,15 @@ locate it correctly horizontally"
 
 (defclass ball-logic(component)
   ((pause :initform 3.0 :initarg :pause)))
+
+(defun pong-serve(phys)
+  "given a physics component representing the ball, serve it"
+  (with-slots (vx vy) phys
+    ; rotate by max angle about horizontal 
+    (let ((rot (+ (degs-rads 90.0)
+		  (random-range (/ *ball-serve-max-angle* -2.0) (/ *ball-serve-max-angle* 2.0)))))
+      (setf vx (* *ball-serve-speed* (sin rot)))
+      (setf vy (* *ball-serve-speed* (cos rot))))))
 
 (defmethod handle-message((comp ball-logic) message-type &rest rest)  
   (let ((owner (slot-value comp 'owner)))
@@ -184,9 +201,9 @@ locate it correctly horizontally"
 		   (decf pause dt)
 		 (if (< pause 0.0)
 		     (progn 
+		       ; launch ball
 		       (setf pause 0.0)
-		       (setf vx (random-range 4.0 10.0))
-		       (setf vy (random-range -8.0 8.0))))))
+		       (pong-serve phys)))))
 
 	     ; hit goal handling	      
 
