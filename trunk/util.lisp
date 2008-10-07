@@ -90,6 +90,9 @@
 
 ;;;; random unique name
 
+(defun random-50-50()
+  (> (random 200) 100))
+
 (defun random-unique-name()
   (format nil "anon ~a" (get-next-uid)))
 
