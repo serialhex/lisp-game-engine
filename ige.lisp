@@ -2,6 +2,9 @@
 ;;;; An object oriented compoment based, data driven multimedia framework
 ;;;; (C)2008 Justin Heyes-Jones
 
+; todo
+; add objects to the currently running level
+
 (in-package :cl-user)  
 
 ; Set up global vars used throughout the engine

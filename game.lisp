@@ -65,6 +65,10 @@ must update the objects by sending appropriate update messages."
 	 (level-objects (slot-value (slot-value game 'current-level) 'objects)))
     (get-components-of-type level-objects type)))
 
+(defun game-add-object-to-active-objects(obj)
+  "Add an object to the active object list"
+  (push obj (slot-value (engine-get-game) 'active-objects)))
+
 
 
 
