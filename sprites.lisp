@@ -36,18 +36,15 @@
 (defun load-sprite-image(sprite-def-1)
   "Given a sprite def load in it's source bmp and make a surface with the appropriate colour key"
   (let ((surface (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*)))
-    (unless surface ; if the surface exists just exit
-;      (format t "loading image file ~a~%" (sprite-def-bmp-file sprite-def-1))
+    (unless surface
       (let ((image-surface 
 	     (sdl:load-image (sprite-def-bmp-file sprite-def-1))))
 	(if (null image-surface)
 	    (error "failed to get a surface from the bmp ~a" image-surface))
-	(let ((surface (sdl:convert-surface
-			:surface image-surface
-			:key-color (sprite-def-background-colour sprite-def-1))))
-	  (if surface
-	      (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) surface)
-	      (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1))))))))
+	(sdl:set-color-key (sprite-def-background-colour sprite-def-1) :surface image-surface)
+	(if image-surface
+	    (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) image-surface)
+	    (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
 
 (defun get-sprite-frame-with-index(frame-list index)
   "Given a list of frames return the one with index provided"
