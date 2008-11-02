@@ -25,6 +25,13 @@
 (defparameter *ball-serve-speed* 6.0)
 (defparameter *ball-serve-max-angle* (degs-rads 90.0))
 
+; court 
+
+(defparameter *court-screen-top-offset* 40)
+(defparameter *court-screen-bottom-offset* 10)
+(defparameter *court-screen-left-offset* 10)
+(defparameter *court-screen-right-offset* 10)
+
 ;; The pong game subclass the game object to make your game
 ;; this is not a composite-object or a component
 ;; it's a subclass of game, which has level management 
@@ -283,6 +290,7 @@ and the specified text properties"
     (add-component obj pong)
     obj))
 
+
 (defun make-ball()
   (let ((phys (make-instance '2d-physics
 			     :x (random-range 0.0 *WINDOW-WIDTH*) :y (random-range 0.0 *WINDOW-HEIGHT*) 
@@ -384,6 +392,42 @@ and the specified text properties"
 		      (sdl:color :r 255 :g 255 :b 255)
 		      name)))
 
+; the court... this what draws the court and specifies the size
+; of it relative to the screen and so on
+
+(defclass court(component)
+  ((top-offset :initform 0.0 :initarg :top-offset)
+   (bottom-offset :initform 0.0 :initarg :bottom-offset)
+   (left-offset :initform 0.0 :initarg :left-offset)
+   (right-offset :initform 0.0 :initarg :right-offset)
+   ))
+
+; court message handler
+
+(defmethod handle-message((court-comp court) message-type &rest rest)  
+  (let ((owner (slot-value court-comp 'owner)))
+    (case message-type 
+      ('update
+       t)
+      ('draw
+       ; draw the screen bounds
+       (with-slots (left-offset right-offset top-offset bottom-offset) court-comp
+	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) top-offset :color (sdl:color :r 255 :g 255 :b 255))
+	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
+	 (sdl:draw-vline left-offset top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
+	 (sdl:draw-vline (- *WINDOW-WIDTH* right-offset) top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255)))))))
+
+(defun make-court()
+  (let ((court (make-instance 'court
+			      :top-offset *court-screen-top-offset*
+			      :bottom-offset *court-screen-bottom-offset*
+			      :left-offset *court-screen-left-offset*
+			      :right-offset *court-screen-right-offset*))
+	(obj (make-instance 'composite-object
+			    :name "court")))
+    (add-component obj court)
+    obj))
+
 (defun make-gameplay-level()
   "creates the pong gameplay level"
   (let ((level (make-instance 'level :name "level 1")))
@@ -393,6 +437,7 @@ and the specified text properties"
     (level-add-object level (make-frame-rate-display))
     (level-add-object level (make-score-text 'left))
     (level-add-object level (make-score-text 'right))
+    (level-add-object level (make-court))
     level))
 
 (defun make-pong()
