@@ -210,6 +210,7 @@ locate it correctly horizontally"
 		     (progn 
 		       ; launch ball
 		       (setf pause 0.0)
+		       (format t "serve")
 		       (pong-serve phys)))))
 
 	     ; hit goal handling	      
@@ -296,7 +297,7 @@ and the specified text properties"
 			     :x (random-range 0.0 *WINDOW-WIDTH*) :y (random-range 0.0 *WINDOW-HEIGHT*) 
 			     :vx (random-range 4.0 10.0) :vy (random-range -8.0 8.0)
 			     :collide-type 'ball
-			     :collide-with-types '(paddle left-goal right-goal wall)))
+			     :collide-with-types '(paddle)))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def ball-sprite :current-frame 'frame-1
 			     :speed 8.0))
