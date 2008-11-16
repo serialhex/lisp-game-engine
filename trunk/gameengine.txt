@@ -8,6 +8,10 @@ TODO
 ********************************************************************************
 
 VHIGH iterate over components more efficiently - need to add components to a list, one for each type
+      I refrain from doing this because it requires explicit management of resources and memory which 
+      seems unlispy
+
+HIGH sound
 
 MED Multiple components of same type in an object
 
@@ -22,6 +26,7 @@ LOW      bonus modes, lots of balls.
 MED Object creation
       Able to create instances of objects from a text or DSL spec, or gui
       Instances share data if possible
+
 HIGH      Be able to reset data to initial values
 
 MED Drawing must be deferred so you can sort, do layers and so on

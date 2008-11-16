@@ -28,9 +28,9 @@
 (defparameter *bmp-surfaces* (make-image-cache))
 
 (defun flush-image-cache()
-  "Flushes the image cache, freeing all the surfaces"
+  "Flushes the image cache, freeing all the surfaces, uses sdl::free to avoid messing up weak pointer handling"
   (loop for v being the hash-values of *bmp-surfaces* do 
-	(sdl-cffi::SDL-Free-Surface (sdl:fp v)))
+	(sdl::free v))
   (setf *bmp-surfaces* (make-image-cache)))
 
 (defun load-sprite-image(sprite-def-1)
