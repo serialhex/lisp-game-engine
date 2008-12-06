@@ -38,10 +38,9 @@
   (let ((surface (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*)))
     (unless surface
       (let ((image-surface 
-	     (sdl:load-image (sprite-def-bmp-file sprite-def-1))))
+	     (sdl:load-image (sprite-def-bmp-file sprite-def-1) :color-key (sprite-def-background-colour sprite-def-1))))
 	(if (null image-surface)
 	    (error "failed to get a surface from the bmp ~a" image-surface))
-	(sdl:set-color-key (sprite-def-background-colour sprite-def-1) :surface image-surface)
 	(if image-surface
 	    (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) image-surface)
 	    (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
