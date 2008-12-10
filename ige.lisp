@@ -28,7 +28,6 @@
 ;;;; Game/Audio and graphics systems - all games can use these
 (load "util")
 (load "sprites") ; sprite drawing, animation and file handling
-(load "input") ; joystick, mouse and keyboard
 
 (load "components") ; generic components and objects
 
@@ -63,7 +62,7 @@
 	      :flags (engine-get-window-flags full-screen-p)
 	      :title-caption "Game engine" :icon-caption "Game engine")
   (sdl:initialise-default-font)
-  (input:initialise) 
+  (sdl:initialise-input-util) 
   (setf (sdl:frame-rate) 60) 
   (setf *engine-active* t))
 
@@ -72,7 +71,7 @@
   (if (null *engine-active*)
       (error "engine-init was not called"))
   (sprites:flush-image-cache)
-  (input:quit)
+  (sdl:quit-input-util)
   (sdl:quit-sub-systems)
   (sdl:quit-sdl)
   (setf *engine-active* nil))
@@ -90,17 +89,17 @@
   (sdl:with-events  ()
     (:quit-event () t)
     (:key-down-event (:key key)
-		     (input:handle-key-down key)
+		     (sdl:handle-key-down key)
 		     (if (sdl:key= key :SDL-KEY-ESCAPE)
 			 (sdl:push-quit-event)))
     (:key-up-event (:key key)
-		     (input:handle-key-up key))
+		     (sdl:handle-key-up key))
     (:idle () ;; redraw screen on idle
 	   ;; fill the background
 	   (sdl:clear-display *BG-COLOR*)
 	   (engine-update-game)
 	   (sdl:update-display)
-	   (input:update (/ 1.0 (sdl:frame-rate))))))
+	   (sdl:update-input-util (/ 1.0 (sdl:frame-rate))))))
 
 (defun engine-get-game()
   *engine-game*)
