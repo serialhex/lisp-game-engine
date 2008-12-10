@@ -20,7 +20,7 @@
 	 (cond 
 
 	   ; handle the up arrow key
-	   ((input:key-pressed-p :SDL-KEY-UP)
+	   ((sdl:key-pressed-p :SDL-KEY-UP)
 	    (if (and selected-p (> time-selected 0.0))
 		(if prev-item
 		    (progn
@@ -36,7 +36,7 @@
 			(setf color selected-color))))))
 
 	   ; handle the down arrow key
-	   ((input:key-pressed-p :SDL-KEY-DOWN)
+	   ((sdl:key-pressed-p :SDL-KEY-DOWN)
 	    (if (and selected-p (> time-selected 0.0))
 		(if next-item
 		    (progn
@@ -53,7 +53,7 @@
 
 	        ; handle return/enter key to trigger menu option
 	   
-		((input:key-pressed-p :SDL-KEY-RETURN)
+		((sdl:key-pressed-p :SDL-KEY-RETURN)
 		 (if (and selected-p action)
 		     (funcall action))))
 	 (setf time-selected (+ (/ 1.0 (sdl:frame-rate)))))))))

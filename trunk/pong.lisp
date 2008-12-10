@@ -2,6 +2,8 @@
 
 ; pong bugs
 
+; keep paddles in frame
+
 ; quit game does not exit engine (bug?)
 
 ; rework collision so it works properly, not just reflect
@@ -21,9 +23,16 @@
 (defparameter *paddle-side-offset* 10.0 "How far from the edges the paddles are")
 
 (defparameter *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
-
 (defparameter *ball-serve-speed* 6.0)
 (defparameter *ball-serve-max-angle* (degs-rads 90.0))
+(defparameter *player-paddle-speed* 5.0)
+(defparameter *player-paddle-accel* 40.0)
+(defparameter *hard-ai-paddle-speed* 7.0)
+
+(defun get-player-paddle-speed(time)
+  "get the player paddle speed based on how long it's been moving"
+  (+ *player-paddle-speed* 
+     (* 0.5 *player-paddle-accel* (* time time))))
 
 ; court 
 
@@ -101,9 +110,6 @@
   ((control-type :initform 'none :initarg :control-type) ; none, ai-easy, ai-hard, player etc
    (side :initform 'left :initarg :side)))
 
-(defparameter *player-paddle-speed* 5.0)
-(defparameter *hard-ai-paddle-speed* 7.0)
-
 (defun reflect-off-screen-y-to-screen(y height)
   "allows for size of ball"
   (let ((edge (- *WINDOW-HEIGHT* height)))
@@ -152,6 +158,7 @@ locate it correctly horizontally"
 	(setf x *paddle-side-offset*)
 	(setf x (- *WINDOW-WIDTH* 1 width *paddle-side-offset*)))))
 
+; message handler for player paddle
 (defmethod handle-message((comp player-paddle-logic) message-type &rest rest)  
   (let ((owner (slot-value comp 'owner)))
     (case message-type 
@@ -169,12 +176,19 @@ locate it correctly horizontally"
              ; basic input - the up down arrows move the paddle
 	     ; which moves more rapidly the longer the key is held
 	    (setf (slot-value phys 'vy) 0.0)
-	    (when (input:key-held-p :SDL-KEY-UP)
+	    (when (sdl:key-held-p :SDL-KEY-UP)
 	      (setf (slot-value phys 'vy) 
-		    (* -1.0 *player-paddle-speed* (+ 0.75 (input:key-held-time :SDL-KEY-UP)))))
-	    (when (input:key-held-p :SDL-KEY-DOWN)
+		    (* -1.0 (get-player-paddle-speed (sdl:key-time-in-current-state :SDL-KEY-UP)))))
+	    (when (sdl:key-held-p :SDL-KEY-DOWN)
 	      (setf (slot-value phys 'vy) 
-		    (* 1.0 *player-paddle-speed* (+ 0.75 (input:key-held-time :SDL-KEY-DOWN))))))
+		    (* 1.0 (get-player-paddle-speed (sdl:key-time-in-current-state :SDL-KEY-DOWN)))))
+	    ; now clip to the court
+	    (if (and
+		 (< (slot-value phys 'y) *court-screen-top-offset*)
+		 (< (slot-value phys 'vy) 0.0))
+		(progn
+		  (setf (slot-value phys 'y) *court-screen-top-offset*)
+		  (setf (slot-value phys 'vy) 0.0))))
 	   (otherwise
 	    (error "~a is not a known control type for player-paddle-logic component"))))))))
 
@@ -210,7 +224,6 @@ locate it correctly horizontally"
 		     (progn 
 		       ; launch ball
 		       (setf pause 0.0)
-		       (format t "serve")
 		       (pong-serve phys)))))
 
 	     ; hit goal handling	      
