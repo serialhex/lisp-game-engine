@@ -246,12 +246,12 @@ locate it correctly horizontally"
 		 (setf y (screen-center-y))
 		 (setf pause 3.0)))
 
-  	     ; top of screen handling - just bounce
+  	     ; top of court handling - just bounce
 
-	     (when (< y 0)
+	     (when (< y *court-screen-top-offset*)
 	       (setf vy (abs vy)))
 	     
-	     (when (> (+ y height) (1- *WINDOW-HEIGHT*))
+	     (when (> (+ y height) (- *WINDOW-HEIGHT* *court-screen-bottom-offset*))
 	       (setf vy (* -1 (abs vy))))
 
 	     ; on collision with player 
@@ -426,10 +426,12 @@ and the specified text properties"
       ('draw
        ; draw the screen bounds
        (with-slots (left-offset right-offset top-offset bottom-offset) court-comp
-	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) top-offset :color (sdl:color :r 255 :g 255 :b 255))
 	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
 	 (sdl:draw-vline left-offset top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
-	 (sdl:draw-vline (- *WINDOW-WIDTH* right-offset) top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255)))))))
+	 (sdl:draw-vline (- *WINDOW-WIDTH* right-offset) top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
+	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) top-offset :color (sdl:color :r 255 :g 255 :b 255))
+	 (let ((center (round (+ left-offset (/ (- (- *WINDOW-WIDTH* right-offset) left-offset) 2.0)))))
+	   (sdl:draw-vline center top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))))))))
 
 (defun make-court()
   (let ((court (make-instance 'court

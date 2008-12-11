@@ -121,10 +121,11 @@
 	result))))
 
 ;;;; simple O(n^2) collision check for a certain object
-;;;; todo some kind of caching
+;;;; todo some kind of caching or spatial data structure like a kd-tree
 (defun get-2d-physics-collisions(comp)
   ; only collide if we have some types to collide with
   (if (slot-value comp 'collide-with-types)
+
       (let ((candidates 
 	     (game-get-components-of-type '2d-physics)))
 
