@@ -31,6 +31,10 @@
 
 (load "components") ; generic components and objects
 
+(load "2dphysics")
+(load "animatedsprites")
+(load "text")
+
 (load "menu") ; menu system
 (load "game") ; game and level management
 

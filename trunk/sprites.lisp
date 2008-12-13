@@ -14,7 +14,7 @@
 
 (in-package :sprites)
 
-(defstruct sprite-def-frame name x1 y1 x2 y2)
+(defstruct sprite-def-frame name x1 y1 x2 y2 xoff yoff)
 (defstruct sprite-def bmp-file background-colour frames)
 
 ;;;; The image cache is a hash table of bmp filenames for each sprite 
@@ -33,17 +33,17 @@
 	(sdl::free v))
   (setf *bmp-surfaces* (make-image-cache)))
 
-(defun load-sprite-image(sprite-def-1)
+(defun load-sprite-image(sprite-def)
   "Given a sprite def load in it's source bmp and make a surface with the appropriate colour key"
-  (let ((surface (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*)))
+  (let ((surface (gethash (sprite-def-bmp-file sprite-def) *bmp-surfaces*)))
     (unless surface
       (let ((image-surface 
-	     (sdl:load-image (sprite-def-bmp-file sprite-def-1) :color-key (sprite-def-background-colour sprite-def-1))))
+	     (sdl:load-image (sprite-def-bmp-file sprite-def) :color-key (sprite-def-background-colour sprite-def))))
 	(if (null image-surface)
 	    (error "failed to get a surface from the bmp ~a" image-surface))
 	(if image-surface
-	    (setf (gethash (sprite-def-bmp-file sprite-def-1) *bmp-surfaces*) image-surface)
-	    (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def-1)))))))
+	    (setf (gethash (sprite-def-bmp-file sprite-def) *bmp-surfaces*) image-surface)
+	    (error "Unable to load imagefile ~a~%" (sprite-def-bmp-file sprite-def)))))))
 
 (defun get-sprite-frame-with-index(frame-list index)
   "Given a list of frames return the one with index provided"
@@ -64,27 +64,31 @@ and height and return them as a a list"
     (values
      (1+ (- (sprite-def-frame-x2 frame) (sprite-def-frame-x1 frame)))
      (1+ (- (sprite-def-frame-y2 frame) (sprite-def-frame-y1 frame))))))
-  
-;(defun get-sprite-frame-width(sprite-def target-frame))
+
+(defun round-coords-and-add-offset(x y xoff yoff)
+  "When drawing sprites, this rounds the coords to make sure they are integer
+and then subtracts the offset. For example if the offset is in the center of 
+the sprite, then drawing it at 0,0 actualy draws it - xoff, - yoff"
+  (values 
+   (- (round x) xoff)
+   (- (round y) yoff)))
   
 (defun draw-sprite(screen x y sprite-def target-frame)
   "Draw a sprite"
   (load-sprite-image sprite-def) ; ensure bmp is loaded (will only load once)
   (let ((surface (gethash (sprite-def-bmp-file sprite-def) *bmp-surfaces*))
 	(frame (get-sprite-frame (sprite-def-frames sprite-def) target-frame)))
-    (multiple-value-bind (sw sh)
-	(get-sprite-frame-width-and-height sprite-def target-frame)
-      (if surface
-	  (sdl-base::with-rectangles ((src-rect) (dst-rect))
-	    (setf (sdl-base::rect-x src-rect) (floor (sprite-def-frame-x1 frame))
-		  (sdl-base::rect-y src-rect) (floor (sprite-def-frame-y1 frame))
-		  (sdl-base::rect-w src-rect) (floor sw)
-		  (sdl-base::rect-h src-rect) (floor sh)
-		  (sdl-base::rect-x dst-rect) (floor x)
-		  (sdl-base::rect-y dst-rect) (floor y))
-	    (sdl-base:blit-surface (sdl:fp surface) (sdl:fp screen)
-				   src-rect  dst-rect))
-	  (error "no surface")))))
+    (multiple-value-bind (xnew ynew)
+	(round-coords-and-add-offset x y (sprite-def-frame-xoff frame) (sprite-def-frame-yoff frame))
+      (multiple-value-bind (sw sh)
+	  (get-sprite-frame-width-and-height sprite-def target-frame)
+	(if surface
+	    (let ((src-rect (rectangle :x (sprite-def-frame-x1 frame)
+				       :y (sprite-def-frame-y1 frame)
+				       :w sw :h sh))
+		  (dst-rect (rectangle :x xnew :y ynew)))
+	      (sdl-base:blit-surface (sdl:fp surface) (sdl:fp screen) (sdl:fp src-rect) (sdl:fp dst-rect)))
+	    (error "no surface"))))))
 
 (defun get-frame-from-time-and-speed(num-frames speed time)
   "Given the number of frames in an animation and the speed, figure out which frame to be playing at a given time"

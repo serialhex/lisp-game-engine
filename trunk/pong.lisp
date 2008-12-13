@@ -1,6 +1,13 @@
 ;;;; components needed to play pong
 
+; DONE animated sprites need a handle. an offset to draw them at. for example, the balls phsyics position should be the
+; center of the bitmap. so the physics works as it does now, but the draw position is at a user specified offset
+; TODO set it up so paddles work. 
+
+
 ; pong bugs
+
+; DONE use offset for ball
 
 ; keep paddles in frame
 
@@ -223,6 +230,7 @@ locate it correctly horizontally"
 		 (if (< pause 0.0)
 		     (progn 
 		       ; launch ball
+		       (format nil "pause serve")
 		       (setf pause 0.0)
 		       (pong-serve phys)))))
 
@@ -254,7 +262,7 @@ locate it correctly horizontally"
 	     (when (> (+ y height) (- *WINDOW-HEIGHT* *court-screen-bottom-offset*))
 	       (setf vy (* -1 (abs vy))))
 
-	     ; on collision with player 
+	     ; on collisions handle using the default physics 
 	     (if collision-list 
 		 (if (< x (screen-center-x))
 		     (setf vx (abs vx))
@@ -262,7 +270,7 @@ locate it correctly horizontally"
 
 (defun make-left-pong-player()
   (let ((phys (make-instance '2d-physics
-			     :collide-type 'paddle))
+			     :collide-type 'paddle :y *paddle-start-y*))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def left-bat-sprite :current-frame 'frame-1
 			     :speed 5.0)) ; frames per second
@@ -290,7 +298,7 @@ and the specified text properties"
 
 (defun make-right-pong-player()
   (let ((phys (make-instance '2d-physics
-			     :collide-type 'paddle))
+			     :collide-type 'paddle :y *paddle-start-y*))
 	(anim (make-instance 'animated-sprite
 			     :sprite-def right-bat-sprite :current-frame 'frame-1
 			     :speed 5.0)) ; frames per second
@@ -314,7 +322,7 @@ and the specified text properties"
 	(anim (make-instance 'animated-sprite
 			     :sprite-def ball-sprite :current-frame 'frame-1
 			     :speed 8.0))
-	(ball (make-instance 'ball-logic))
+	(ball (make-instance 'ball-logic :pause 3.0))
 	(obj (make-instance 'composite-object
 			    :name "ball")))
     (add-component obj phys)
