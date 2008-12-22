@@ -60,7 +60,7 @@
   (setf *FULL-SCREEN-P* full-screen-p)
   ; init game engine
   (sdl:init-sdl)  
-  (sdl:init-sub-systems)
+  (sdl:init-subsystems)
   (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
   (sdl:window window-width window-height 
 	      :flags (engine-get-window-flags full-screen-p)
@@ -76,7 +76,7 @@
       (error "engine-init was not called"))
   (sprites:flush-image-cache)
   (sdl:quit-input-util)
-  (sdl:quit-sub-systems)
+  (sdl:quit-subsystems)
   (sdl:quit-sdl)
   (setf *engine-active* nil))
 
