@@ -1,14 +1,13 @@
 ;;;; Pong implemented with IGE
 
-; DONE animated sprites need a handle. an offset to draw them at. for example, the balls phsyics position should be the
+; DONE animated sprites need a handle. an offset to draw them at. for example, the balls physics position should be the
 ; center of the bitmap. so the physics works as it does now, but the draw position is at a user specified offset
 ; DONE set it up so paddles work. 
 
 ; limit paddles to court bounds... how specify court bounds? should be just globals
 
-; add message system so ball is dummer.. reset message, serve message (direction)
-
-; game manages the pause and drawing the court etc. 
+; DONE add message system so ball is dummer.. reset message, serve message (direction)
+; DONE game manages the pause
 
 ; draw everything at relative coordinates - define court with center at screen center - add basic 2d camera
 ; functionality
@@ -21,11 +20,9 @@
 
 ; ball prediction not working
 
-;; recent fixes
+; DONE ball speed (need to launch at range of angles, same speed all the time)
 
-; ball speed (need to launch at range of angles, same speed all the time)
-
-;; some data for pong 
+;; load sprite info
 
 (load "pongspritedefs") ; 
 
@@ -34,6 +31,7 @@
 (defparameter *paddle-side-offset* 30.0 "How far from the edges the paddles are")
 
 (defparameter *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
+(defparameter *between-play-pause* 3.0)
 (defparameter *ball-serve-speed* 6.0)
 (defparameter *ball-serve-max-angle* (degs-rads 90.0))
 (defparameter *player-paddle-speed* 5.0)
@@ -47,6 +45,16 @@
 (defparameter *court-screen-left-offset* 10)
 (defparameter *court-screen-right-offset* 10)
 
+(defun court-x-center()
+  (+ *court-screen-left-offset*
+     (/ (- (- *WINDOW-WIDTH* *court-screen-right-offset*) 
+	   *court-screen-left-offset*) 2.0)))
+
+(defun court-y-center()
+  (+ *court-screen-top-offset*
+     (/ (- (- *WINDOW-HEIGHT* *court-screen-bottom-offset*) 
+	   *court-screen-top-offset*) 2.0)))
+
 ;; The pong game subclass the game object to make your game
 ;; this is not a composite-object or a component
 ;; it's a subclass of game, which has level management 
@@ -56,40 +64,64 @@
 ;; objects and components
 ;; In this case the update sends update, collide and draw
 ;; and before that it updates itself, managing the current 
-;; level. In addition it has a message-handler which objects
+;; level. 
+;; In addition it has a message-handler which objects
 ;; can talk to using 
 ;; (handle-message (game message-type &rest rest))
+;; This is where you store data that all components 
+;; need to look at.
 
+; todo a lot of these slots need hooking up
 (defclass pong-game(game)
   ((left-score :initform 0 :initarg :left-score)
    (right-score :initform 0 :initarg :right-score)
    (hits-this-rally :initform 0 :initarg :hits-this-rally)
    (win-score :initform 10 :initarg :win-score)
-   (last-scorer :initform nil :initarg :last-scorer)))
+   (last-scorer :initform nil :initarg :last-scorer)
+   (pause :initform *between-play-pause* :initarg :pause :documentation "Pauses in the game between scored points")))
 
 (defmethod update((game pong-game))
-  t)
+  ; handle game pause
+  (let ((dt (/ 1.0 (sdl:frame-rate))))
+    (with-slots (pause) game
+      (when (> pause 0.0)
+	(decf pause dt)
+	(when (< pause 0.0) 
+
+	  ; launch ball
+	  (setf pause 0.0)
+	  (let* ((ball-obj (game-find-object-with-name "ball"))
+		 (ball-logic (find-component-with-type ball-obj 'ball-logic)))
+	    ; todo must get serve direction from last scorer
+	    (handle-message ball-logic 'serve 'left)))))))
 
 (defun handle-game-over(left-score right-score win-score)
   "check for game over, and go to the game over level"
   (when (or (= win-score left-score) (= win-score right-score))
     (game-request-level (engine-get-game) "game over")))
 
+; todo, the players should be an array so you can halve the amount of code here
+
 (defmethod handle-message((game pong-game) message-type &rest rest)  
-  (with-slots (active-objects left-score right-score win-score) game
+  (with-slots (active-objects left-score right-score win-score pause) game
     (case message-type 
       ('left-scored
        (incf left-score)
        (send-message-to-object-component active-objects "left score"
 					 'text 'change-text 
 					 (format nil "~2,'0d" left-score))
-       (handle-game-over left-score right-score win-score))
+       (handle-game-over left-score right-score win-score)
+       (setf pause *between-play-pause*)
+       (send-message-to-object-component active-objects "ball" 'ball-logic 'reset))
+
       ('right-scored
        (incf right-score)
        (send-message-to-object-component active-objects "right score"
 					 'text 'change-text 
 					 (format nil "~2,'0d" right-score))
-       (handle-game-over left-score right-score win-score)))))
+       (handle-game-over left-score right-score win-score)
+       (setf pause *between-play-pause*)
+       (send-message-to-object-component active-objects "ball" 'ball-logic 'reset)))))
 
 ; todo - optimise sending messages to all components of certain types
 ; for example populate lists based on what messages they receive,
@@ -206,10 +238,10 @@ locate it correctly horizontally"
 ;;;; This is the component that manages the ball
 
 (defclass ball-logic(component)
-  ((pause :initform 3.0 :initarg :pause)))
+  ())
 
 (defun pong-serve(phys)
-  "given a physics component representing the ball, serve it"
+  "Set up the x and y speed of the ball on a serve"
   (with-slots (vx vy) phys
     ; rotate by max angle about horizontal 
     (let ((rot (+ (degs-rads 90.0)
@@ -220,53 +252,47 @@ locate it correctly horizontally"
 (defmethod handle-message((comp ball-logic) message-type &rest rest)  
   (let ((owner (slot-value comp 'owner)))
     (case message-type 
+      ('reset
+       ; set the ball to initial state
+
+       (let ((phys (find-component-with-type owner '2d-physics)))
+	 (with-slots (x y vx vy) phys
+	   
+	   (setf vx 0.0)
+	   (setf vy 0.0)
+	   (setf x (court-x-center))
+	   (setf y (court-y-center)))))
+
+      ('serve
+       ; todo don't ignore direction to serve argument
+       (let ((phys (find-component-with-type owner '2d-physics)))
+	 (pong-serve phys)))
+
       ('update
        (let ((phys (find-component-with-type owner '2d-physics))
 	     (dt (/ 1.0 (sdl:frame-rate))))
+
 	 (with-slots (x y vx vy ax ay width height collision-list) phys
 	   (with-slots (pause) comp
 
-	     ; pause between goals handling 
-	   
-	     (if (> pause 0.0)
-		 (progn
-		   (decf pause dt)
-		 (if (< pause 0.0)
-		     (progn 
-		       ; launch ball
-		       (format nil "pause serve")
-		       (setf pause 0.0)
-		       (pong-serve phys)))))
-
-	     ; hit goal handling	      
-
-	     (when (< x -20)
-	       (progn
-		 (handle-message (engine-get-game) 'right-scored)
-		 (setf vx 0.0)
-		 (setf vy 0.0)
-		 (setf x (screen-center-x))
-		 (setf y (screen-center-y))
-		 (setf pause 3.0)))
+	     (when (< x *court-screen-left-offset*)
+	       (handle-message (engine-get-game) 'right-scored))
 	     
-	     (when (> (+ x width) (+ 20 (1- *WINDOW-WIDTH*)))
-	       (progn
-		 (handle-message (engine-get-game) 'left-scored)
-		 (setf vx 0.0)
-		 (setf vy 0.0)
-		 (setf x (screen-center-x))
-		 (setf y (screen-center-y))
-		 (setf pause 3.0)))
+	     (when (> x (- *WINDOW-WIDTH* *court-screen-right-offset*))
+	       (handle-message (engine-get-game) 'left-scored))
 
   	     ; top of court handling - just bounce
 
 	     (when (< y *court-screen-top-offset*)
 	       (setf vy (abs vy)))
 	     
-	     (when (> (+ y height) (- *WINDOW-HEIGHT* *court-screen-bottom-offset*))
+	     (when (> y (- *WINDOW-HEIGHT* *court-screen-bottom-offset*))
 	       (setf vy (* -1 (abs vy))))
 
-	     ; on collisions handle using the default physics 
+	     ; collisions with other objects mean we hit the paddles
+             ; just reverse the x velocity
+	     ; todo would be nice to handle the paddles having rounded
+	     ; corners to ping the ball off in more random directions
 	     (if collision-list 
 		 (if (< x (screen-center-x))
 		     (setf vx (abs vx))
@@ -326,7 +352,7 @@ and the specified text properties"
 	(anim (make-instance 'animated-sprite
 			     :sprite-def ball-sprite :current-frame 'frame-1
 			     :speed 8.0))
-	(ball (make-instance 'ball-logic :pause 3.0))
+	(ball (make-instance 'ball-logic))
 	(obj (make-instance 'composite-object
 			    :name "ball")))
     (add-component obj phys)
@@ -477,11 +503,12 @@ and the specified text properties"
     (engine-set-game game)))
 
 (defun play-pong(&optional (full-screen nil))
-	   (engine-init :window-height 480 :window-width 640 :full-screen-p full-screen)
-	   (make-pong)
-	   (engine-run)
-	   (engine-quit)
-	   (setf *FULL-SCREEN-P* nil))
+  (engine-init :window-height 480 :window-width 640 :full-screen-p full-screen)
+  (make-pong)
+  (engine-run)
+  (engine-quit)
+  (setf *FULL-SCREEN-P* nil))
+
 
 
 

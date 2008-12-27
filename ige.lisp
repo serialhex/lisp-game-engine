@@ -1,9 +1,11 @@
 ;;;; IGE - Interactive Game Engine
-;;;; An object oriented compoment based, data driven multimedia framework
+;;;; An object oriented compoment based, data driven multimedia and game framework
 ;;;; (C)2008 Justin Heyes-Jones
 
 ; todo
 ; add objects to the currently running level
+; framerate - add update delta to engine instead of calculating it everywhere
+; that is, the current frame update time 
 
 (in-package :cl-user)  
 
