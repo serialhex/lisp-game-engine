@@ -34,7 +34,12 @@
   "Set the game active-objects to be the ones in the new level."
   (with-slots (current-level active-objects requested-level) game
     (setf current-level requested-level)
-    (setf active-objects (slot-value current-level 'objects))))
+    (setf active-objects (slot-value current-level 'objects))
+
+    ; todo this may need to be an option. for example you want to be
+    ; able to have some objects move between levels, and not get reset 
+    ; messaqes
+    (send-message-to-all-objects active-objects 'reset)))
 
 (defgeneric game-update(game))
 
@@ -59,7 +64,7 @@ must update the objects by sending appropriate update messages."
 	(level (slot-value *engine-game* 'current-level)))
     (find-object-with-name (slot-value level 'objects) name)))
 
-(defun game-get-components-of-type(type)
+(defun game-find-components-of-type(type)
   (let* ((found-components nil)
 	 (game (engine-get-game))
 	 (level-objects (slot-value (slot-value game 'current-level) 'objects)))
