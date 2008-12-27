@@ -1,20 +1,19 @@
-;;;; components needed to play pong
+;;;; Pong implemented with IGE
 
 ; DONE animated sprites need a handle. an offset to draw them at. for example, the balls phsyics position should be the
 ; center of the bitmap. so the physics works as it does now, but the draw position is at a user specified offset
-; TODO set it up so paddles work. 
+; DONE set it up so paddles work. 
+
+; limit paddles to court bounds... how specify court bounds? should be just globals
 
 ; add message system so ball is dummer.. reset message, serve message (direction)
 
 ; game manages the pause and drawing the court etc. 
 
-; draw everything at relative coordinates - define court with center at screen center
-
-; pong bugs
+; draw everything at relative coordinates - define court with center at screen center - add basic 2d camera
+; functionality
 
 ; DONE use offset for ball
-
-; keep paddles in frame
 
 ; quit game does not exit engine (bug?)
 
@@ -32,7 +31,7 @@
 
 ; parameters
 
-(defparameter *paddle-side-offset* 10.0 "How far from the edges the paddles are")
+(defparameter *paddle-side-offset* 30.0 "How far from the edges the paddles are")
 
 (defparameter *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
 (defparameter *ball-serve-speed* 6.0)
@@ -167,8 +166,8 @@
 locate it correctly horizontally"
   (with-slots (x width) physics
     (if (equal (slot-value paddle-logic 'side) 'left)
-	(setf x *paddle-side-offset*)
-	(setf x (- *WINDOW-WIDTH* 1 width *paddle-side-offset*)))))
+	(setf x (+ *court-screen-left-offset* *paddle-side-offset*))
+	(setf x (- *WINDOW-WIDTH* *court-screen-right-offset* *paddle-side-offset*)))))
 
 ; message handler for player paddle
 (defmethod handle-message((comp player-paddle-logic) message-type &rest rest)  
@@ -419,24 +418,24 @@ and the specified text properties"
 		      (sdl:color :r 255 :g 255 :b 255)
 		      name)))
 
-; the game logic - also draws the court for now
+; Handles drawing the court and court collision
 
-(defclass pong-game(component)
-  ((topoffset :initform 0.0 :initarg :topoffset)
-   (bottomoffset :initform 0.0 :initarg :bottomoffset)
-   (leftoffset :initform 0.0 :initarg :leftoffset)
-   (rightoffset :initform 0.0 :initarg :rightoffset)))
+(defclass court(component)
+  ((top-offset :initform 0.0 :initarg :top-offset)
+   (bottom-offset :initform 0.0 :initarg :bottom-offset)
+   (left-offset :initform 0.0 :initarg :left-offset)
+   (right-offset :initform 0.0 :initarg :right-offset)))
 
-; pong game message handler
+; court message handler
 
-(defmethod handle-message((pong-game-comp pong-game) message-type &rest rest)  
-  (let ((owner (slot-value pong-game-comp 'owner)))
+(defmethod handle-message((court-comp court) message-type &rest rest)  
+  (let ((owner (slot-value court-comp 'owner)))
     (case message-type 
       ('update
        t)
       ('draw
        ; draw the screen bounds
-       (with-slots (left-offset right-offset top-offset bottom-offset) pong-game-comp
+       (with-slots (left-offset right-offset top-offset bottom-offset) court-comp
 	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
 	 (sdl:draw-vline left-offset top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
 	 (sdl:draw-vline (- *WINDOW-WIDTH* right-offset) top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
@@ -444,15 +443,15 @@ and the specified text properties"
 	 (let ((center (round (+ left-offset (/ (- (- *WINDOW-WIDTH* right-offset) left-offset) 2.0)))))
 	   (sdl:draw-vline center top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))))))))
 
-(defun make-pong-game()
-  (let ((pong-game (make-instance 'pong-game
+(defun make-court()
+  (let ((court (make-instance 'court
 			      :top-offset *court-screen-top-offset*
 			      :bottom-offset *court-screen-bottom-offset*
 			      :left-offset *court-screen-left-offset*
 			      :right-offset *court-screen-right-offset*))
 	(obj (make-instance 'composite-object
-			    :name "pong-game")))
-    (add-component obj pong-game)
+			    :name "court")))
+    (add-component obj court)
     obj))
 
 (defun make-gameplay-level()
