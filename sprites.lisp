@@ -92,9 +92,13 @@ the sprite, then drawing it at 0,0 actualy draws it - xoff, - yoff"
 
 (defun get-frame-from-time-and-speed(num-frames speed time)
   "Given the number of frames in an animation and the speed, figure out which frame to be playing at a given time"
-  (mod (floor (/ time (time-per-frame speed))) num-frames))
+  (if (= speed 0.0)
+      0
+      (mod (floor (/ time (time-per-frame speed))) num-frames)))
   
 (defun time-per-frame(speed) 
   "How long each animation frame takes"
-  (/ 1.0 speed))
+  (if (> speed 0.0)
+      (/ 1.0 speed)
+      0.0))
     
