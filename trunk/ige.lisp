@@ -85,7 +85,7 @@
 ; Note this works in lispworks, kinda, you can run the main loop in a seperate 
 ; process
 #+lispworks 
-(defun engine-run-as-lisporks-new-process()
+(defun engine-run-as-lispworks-new-process()
   (mp:process-run-function "Game engine" '(:priority 42) #'engine-run))
 
 (defun engine-run()

@@ -40,7 +40,7 @@
   (if (slot-value comp 'collide-with-types)
 
       (let ((candidates 
-	     (game-get-components-of-type '2d-physics)))
+	     (game-find-components-of-type '2d-physics)))
 
 	; filter the list to include only valid types
 	(let ((filtered-candidates

@@ -1,9 +1,19 @@
 ;;;; New pong sprites
 
-; A sprite def tells the engine everything it needs to know about a sprite. 
-; What bmp file it comes from, what the transparent colour is, and a set of 
-; numbered or named frames with x1y1 and x2y2settings (ie where it starts 
-; and where it ends on the image)
+; A sprite def is used to define what cells from an image an animated 
+; sprite comes from. 
+; Including what the transparent colour is, and a set of coordinates of
+; cell frames, and offsets (which are used to displace where the image
+; is drawn) 
+
+(defparameter background-sprite-frames
+  (list (sprites::make-sprite-def-frame :name 'level-1 :x1 0 :y1 0 :x2 639 :y2 479 :xoff 0 :yoff 0)))
+
+(defparameter background-sprites
+  (sprites::make-sprite-def 
+   :bmp-file (sdl:create-path "pongbgnd.bmp" cl-user::*bmp-path*) 
+   :background-colour (sdl:color :r 255 :g 0 :b 255)
+   :frames background-sprite-frames))
 
 (defparameter ball-sprite-frames
   (list (sprites::make-sprite-def-frame :name 'frame-1 :x1 0 :y1 0 :x2 31 :y2 31 :xoff 16 :yoff 16)

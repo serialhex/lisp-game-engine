@@ -37,6 +37,7 @@
 (defparameter *player-paddle-speed* 5.0)
 (defparameter *player-paddle-accel* 40.0)
 (defparameter *hard-ai-paddle-speed* 7.0)
+(defparameter *win-score* 5)
 
 ; court - This defines the court relative to the screen 
 
@@ -76,24 +77,28 @@
   ((left-score :initform 0 :initarg :left-score)
    (right-score :initform 0 :initarg :right-score)
    (hits-this-rally :initform 0 :initarg :hits-this-rally)
-   (win-score :initform 10 :initarg :win-score)
+   (win-score :initform *win-score* :initarg :win-score)
    (last-scorer :initform nil :initarg :last-scorer)
    (pause :initform *between-play-pause* :initarg :pause :documentation "Pauses in the game between scored points")))
 
 (defmethod update((game pong-game))
-  ; handle game pause
-  (let ((dt (/ 1.0 (sdl:frame-rate))))
-    (with-slots (pause) game
-      (when (> pause 0.0)
-	(decf pause dt)
-	(when (< pause 0.0) 
+  (with-slots (current-level pause) game
+
+    (if (string= (slot-value current-level 'name) "level1")
+
+        ; handle game pause
+	(let ((dt (/ 1.0 (sdl:frame-rate))))
+	  (with-slots (pause) game
+	    (when (> pause 0.0)
+	      (decf pause dt)
+	      (when (< pause 0.0) 
 
 	  ; launch ball
-	  (setf pause 0.0)
-	  (let* ((ball-obj (game-find-object-with-name "ball"))
-		 (ball-logic (find-component-with-type ball-obj 'ball-logic)))
+		(setf pause 0.0)
+		(let* ((ball-obj (game-find-object-with-name "ball"))
+		       (ball-logic (find-component-with-type ball-obj 'ball-logic)))
 	    ; todo must get serve direction from last scorer
-	    (handle-message ball-logic 'serve 'left)))))))
+		  (handle-message ball-logic 'serve 'left)))))))))
 
 (defun handle-game-over(left-score right-score win-score)
   "check for game over, and go to the game over level"
@@ -368,7 +373,7 @@ and the specified text properties"
 
 (defun action-start-game()
   "starts the game by going to the gameplay level"
-  (game-request-level (engine-get-game) "level 1"))
+  (game-request-level (engine-get-game) "level1"))
 
 (defun std-text-color()
   (sdl:color :r #xe0 :g #xe0 :b #xe0))
@@ -444,6 +449,17 @@ and the specified text properties"
 		      (sdl:color :r 255 :g 255 :b 255)
 		      name)))
 
+(defun make-background()
+  (let ((phys (make-instance '2d-physics
+			     :x 0 :y 0))
+	(anim (make-instance 'animated-sprite
+			     :sprite-def background-sprites :current-frame 'level-1))
+	(obj (make-instance 'composite-object
+			    :name "background")))
+    (add-component obj phys)
+    (add-component obj anim)
+    obj))
+
 ; Handles drawing the court and court collision
 
 (defclass court(component)
@@ -482,7 +498,7 @@ and the specified text properties"
 
 (defun make-gameplay-level()
   "creates the pong gameplay level"
-  (let ((level (make-instance 'level :name "level 1")))
+  (let ((level (make-instance 'level :name "level1")))
     (level-add-object level (make-left-pong-player))
     (level-add-object level (make-right-pong-player))
     (level-add-object level (make-ball))
@@ -490,6 +506,7 @@ and the specified text properties"
     (level-add-object level (make-score-text 'left))
     (level-add-object level (make-score-text 'right))
     (level-add-object level (make-court))
+    (level-add-object level (make-background))
     level))
 
 (defun make-pong()
@@ -505,9 +522,12 @@ and the specified text properties"
 (defun play-pong(&optional (full-screen nil))
   (engine-init :window-height 480 :window-width 640 :full-screen-p full-screen)
   (make-pong)
-  (engine-run)
-  (engine-quit)
-  (setf *FULL-SCREEN-P* nil))
+  (unwind-protect ; make sure any aborts call quit before returning
+       (engine-run)
+    (and
+     (engine-quit)
+     (setf *FULL-SCREEN-P* nil))))
+
 
 
 
