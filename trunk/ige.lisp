@@ -62,7 +62,7 @@
   (setf *WINDOW-WIDTH* window-width)
   (setf *FULL-SCREEN-P* full-screen-p)
   ; init game engine
-  (sdl:init-sdl)  
+  (sdl:init-sdl :flags SDL:SDL-INIT-AUDIO)  
   (sdl:init-subsystems)
   (setf (sdl:frame-rate) *FRAME-RATE*)
   (sdl:window window-width window-height 
