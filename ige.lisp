@@ -15,6 +15,7 @@
 (defvar *WINDOW-HEIGHT* 480 "Height of window")
 (defvar *FULL-SCREEN-P* nil "Whether or not this is a full screen application") 
 (defvar *BG-COLOR* (sdl:color :r #x22 :g #x22 :b #x44) "Screen is filled with this color each frame")
+(defvar *FRAME-RATE* 30 "Target frame rate")
 
 ; Set the default bitmap path
 ; TODO this should be a variable in the engine
@@ -63,13 +64,12 @@
   ; init game engine
   (sdl:init-sdl)  
   (sdl:init-subsystems)
-  (setf (sdl:frame-rate) 60) ; Set target framerate (or 0 for unlimited)
+  (setf (sdl:frame-rate) *FRAME-RATE*)
   (sdl:window window-width window-height 
 	      :flags (engine-get-window-flags full-screen-p)
 	      :title-caption "Game engine" :icon-caption "Game engine")
   (sdl:initialise-default-font)
   (sdl:initialise-input-util) 
-  (setf (sdl:frame-rate) 60) 
   (setf *engine-active* t))
 
 (defun engine-quit()
@@ -92,6 +92,7 @@
   "The main game engine loop, it updates objects then draws them"
   (if (null *engine-active*)
       (error "engine-init was not called"))
+
   (sdl:with-events  ()
     (:quit-event () t)
     (:key-down-event (:key key)
@@ -101,11 +102,16 @@
     (:key-up-event (:key key)
 		     (sdl:handle-key-up key))
     (:idle () ;; redraw screen on idle
+	   
+           ; set frame rate and cursor visiblity
+	   (setf (sdl:frame-rate) *FRAME-RATE*)
+	   (sdl:show-cursor nil)
+
 	   ;; fill the background
 	   (sdl:clear-display *BG-COLOR*)
 	   (engine-update-game)
 	   (sdl:update-display)
-	   (sdl:update-input-util (/ 1.0 (sdl:frame-rate))))))
+	   (sdl:update-input-util (sdl:frame-time)))))
 
 (defun engine-get-game()
   *engine-game*)

@@ -1,4 +1,4 @@
-;;;; Code which manages games and levels
+;; Code which manages games and levels
 
 (defclass level()
   ((name :initform nil :initarg :name)

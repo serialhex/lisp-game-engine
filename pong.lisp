@@ -1,10 +1,12 @@
 ;;;; Pong implemented with IGE
 
+; TODO
+
+; limit paddles to court bounds... court bounds just globals
+
 ; DONE animated sprites need a handle. an offset to draw them at. for example, the balls physics position should be the
 ; center of the bitmap. so the physics works as it does now, but the draw position is at a user specified offset
 ; DONE set it up so paddles work. 
-
-; limit paddles to court bounds... how specify court bounds? should be just globals
 
 ; DONE add message system so ball is dummer.. reset message, serve message (direction)
 ; DONE game manages the pause
@@ -13,6 +15,8 @@
 ; functionality
 
 ; DONE use offset for ball
+
+; reset scores on game over
 
 ; quit game does not exit engine (bug?)
 
@@ -32,12 +36,19 @@
 
 (defparameter *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
 (defparameter *between-play-pause* 3.0)
-(defparameter *ball-serve-speed* 6.0)
+(defparameter *ball-serve-speed* 250.0)
 (defparameter *ball-serve-max-angle* (degs-rads 90.0))
-(defparameter *player-paddle-speed* 5.0)
-(defparameter *player-paddle-accel* 40.0)
-(defparameter *hard-ai-paddle-speed* 7.0)
-(defparameter *win-score* 5)
+(defparameter *player-start-paddle-speed* 200.0)
+(defparameter *player-max-paddle-speed* 800.0)
+(defparameter *player-paddle-accel* 2600.0)
+(defparameter *hard-ai-paddle-speed* 60.0)
+(defparameter *win-score* 20)
+
+(defparameter *left-player-up-key* :SDL-KEY-q)
+(defparameter *left-player-down-key* :SDL-KEY-z)
+
+(defparameter *right-player-up-key* :SDL-KEY-UP)
+(defparameter *right-player-down-key* :SDL-KEY-DOWN)
 
 ; court - This defines the court relative to the screen 
 
@@ -87,29 +98,39 @@
     (if (string= (slot-value current-level 'name) "level1")
 
         ; handle game pause
-	(let ((dt (/ 1.0 (sdl:frame-rate))))
-	  (with-slots (pause) game
-	    (when (> pause 0.0)
-	      (decf pause dt)
-	      (when (< pause 0.0) 
 
-	  ; launch ball
+	(with-slots (pause) game
+	  (when (> pause 0.0)
+	    (decf pause (sdl:frame-time))
+	    (when (< pause 0.0) 
+
+	        ; launch ball
 		(setf pause 0.0)
 		(let* ((ball-obj (game-find-object-with-name "ball"))
 		       (ball-logic (find-component-with-type ball-obj 'ball-logic)))
-	    ; todo must get serve direction from last scorer
-		  (handle-message ball-logic 'serve 'left)))))))))
+	          ; todo must get serve direction from last scorer
+		  (handle-message ball-logic 'serve 'left))))))))
 
 (defun handle-game-over(left-score right-score win-score)
   "check for game over, and go to the game over level"
   (when (or (= win-score left-score) (= win-score right-score))
-    (game-request-level (engine-get-game) "game over")))
+    (game-request-level (engine-get-game) "game over")
+    (setf (slot-value (engine-get-game) 'left-score) 0)
+    (setf (slot-value (engine-get-game) 'right-score) 0)))
 
 ; todo, the players should be an array so you can halve the amount of code here
 
 (defmethod handle-message((game pong-game) message-type &rest rest)  
   (with-slots (active-objects left-score right-score win-score pause) game
-    (case message-type 
+    (case message-type
+      ('reset
+       (send-message-to-object-component active-objects "left score"
+					 'text 'change-text 
+					 (format nil "~2,'0d" 0))
+       (send-message-to-object-component active-objects "right score"
+					 'text 'change-text 
+					 (format nil "~2,'0d" 0))
+       )
       ('left-scored
        (incf left-score)
        (send-message-to-object-component active-objects "left score"
@@ -144,14 +165,15 @@
     ; now send various messages to the game objects
     ; this way the objects know that update is done before collide
     ; which is done before draw ...
-    (send-message-to-all-objects active-objects 'update (/ 1.0 (sdl:frame-rate)))
+    (send-message-to-all-objects active-objects 'update (sdl:frame-time))
     (send-message-to-all-objects active-objects 'collide)
     (send-message-to-all-objects active-objects 'draw)))
 
 (defun get-player-paddle-speed(time)
   "get the player paddle speed based on how long it's been moving"
-  (+ *player-paddle-speed* 
-     (* 0.5 *player-paddle-accel* (* time time))))
+  (min *player-max-paddle-speed*
+       (+ *player-start-paddle-speed* 
+	  (* 0.5 *player-paddle-accel* (* time time)))))
 
 ;;;; the brains behind the player paddle
 (defclass player-paddle-logic(component)
@@ -221,16 +243,31 @@ locate it correctly horizontally"
 	   ('ai-hard
 	    (do-hard-pong-ai-update owner comp phys))
 	   ('human-keyboard
+
              ; basic input - the up down arrows move the paddle
 	     ; which moves more rapidly the longer the key is held
 	    (setf (slot-value phys 'vy) 0.0)
-	    (when (sdl:key-held-p :SDL-KEY-UP)
-	      (setf (slot-value phys 'vy) 
-		    (* -1.0 (get-player-paddle-speed (sdl:key-time-in-current-state :SDL-KEY-UP)))))
-	    (when (sdl:key-held-p :SDL-KEY-DOWN)
-	      (setf (slot-value phys 'vy) 
-		    (* 1.0 (get-player-paddle-speed (sdl:key-time-in-current-state :SDL-KEY-DOWN)))))
-	    ; now clip to the court
+
+	    (let* ((up-key (if (eq (slot-value comp 'side) 'left) 
+			       *left-player-up-key*
+			       *right-player-up-key*))
+		   (down-key (if (eq (slot-value comp 'side) 'left) 
+			       *left-player-down-key*
+			       *right-player-down-key*))
+		   (move-up (sdl:key-held-p up-key))
+		   (move-down (sdl:key-held-p down-key)))
+
+	      (when move-up
+		(setf (slot-value phys 'vy) 
+		      (* -1.0 (get-player-paddle-speed (sdl:key-time-in-current-state up-key)))))
+	      (when move-down
+		(setf (slot-value phys 'vy) 
+		      (* 1.0 (get-player-paddle-speed (sdl:key-time-in-current-state down-key))))))
+
+	    ; print out the velocity for debugging
+;	    (format t "velocity ~2$ ~a ~%" (slot-value phys 'vy) (slot-value comp 'side) )
+
+	    ; now clip to the court top
 	    (if (and
 		 (< (slot-value phys 'y) *court-screen-top-offset*)
 		 (< (slot-value phys 'vy) 0.0))
@@ -275,7 +312,7 @@ locate it correctly horizontally"
 
       ('update
        (let ((phys (find-component-with-type owner '2d-physics))
-	     (dt (/ 1.0 (sdl:frame-rate))))
+	     (dt (sdl:frame-time)))
 
 	 (with-slots (x y vx vy ax ay width height collision-list) phys
 	   (with-slots (pause) comp
@@ -303,50 +340,24 @@ locate it correctly horizontally"
 		     (setf vx (abs vx))
 		     (setf vx (* -1 (abs vx))))))))))))
 
-(defun make-left-pong-player()
+(defun make-pong-player(side human sprite-def control-type name)
   (let ((phys (make-instance '2d-physics
 			     :collide-type 'paddle :y *paddle-start-y*))
-	(anim (make-instance 'animated-sprite
-			     :sprite-def left-bat-sprite :current-frame 'frame-1
-			     :speed 5.0))
+	(anim (make-instance 'animated-sprite :sprite-def sprite-def
+			     :current-frame 'frame-1 :speed 5.0))
 	(pong (make-instance 'player-paddle-logic
-			     :control-type 'human-keyboard
-			     :side 'left))
-	(obj (make-instance 'composite-object
-			    :name "human player 1")))
+			     :control-type control-type :side side))
+	(obj (make-instance 'composite-object :name name)))
     (add-component obj phys)
     (add-component obj anim)
     (add-component obj pong)
     obj))
 
-
-(defun make-text-object(string x y justification color &optional name)
-  "constructs an object with a text and physics components
-and the specified text properties"
-  (let ((phys (make-instance '2d-physics :x x :y y))
-	(text (make-instance 'text :justification justification :string string :color color))
-	(obj (make-instance 'composite-object
-			    :name (or name (random-unique-name)))))
-    (add-component obj phys)
-    (add-component obj text)
-    obj))
+(defun make-left-pong-player()
+  (make-pong-player 'left t left-bat-sprite 'human-keyboard "left player"))
 
 (defun make-right-pong-player()
-  (let ((phys (make-instance '2d-physics
-			     :collide-type 'paddle :y *paddle-start-y*))
-	(anim (make-instance 'animated-sprite
-			     :sprite-def right-bat-sprite :current-frame 'frame-1
-			     :speed 5.0)) ; frames per second
-	(pong (make-instance 'player-paddle-logic
-			     :control-type 'ai-hard
-			     :side 'right))
-	(obj (make-instance 'composite-object
-			    :name "hard ai player")))
-    (add-component obj phys)
-    (add-component obj anim)
-    (add-component obj pong)
-    obj))
-
+  (make-pong-player 'right t right-bat-sprite 'human-keyboard "right player"))
 
 (defun make-ball()
   (let ((phys (make-instance '2d-physics
@@ -365,11 +376,8 @@ and the specified text properties"
     (add-component obj ball)
     obj))
 
-(defun action-do-something()
-  (format t "do something !~%"))
-
 (defun action-quit-engine()
-  (format t "Quitter!~%"))
+  (format t "Goodbye~%"))
 
 (defun action-start-game()
   "starts the game by going to the gameplay level"
@@ -377,6 +385,17 @@ and the specified text properties"
 
 (defun std-text-color()
   (sdl:color :r #xe0 :g #xe0 :b #xe0))
+
+(defun make-text-object(string x y justification color &optional name)
+  "constructs an object with a text and physics components
+and the specified text properties"
+  (let ((phys (make-instance '2d-physics :x x :y y))
+	(text (make-instance 'text :justification justification :string string :color color))
+	(obj (make-instance 'composite-object
+			    :name (or name (random-unique-name)))))
+    (add-component obj phys)
+    (add-component obj text)
+    obj))
 
 (defun make-title-level()
   "creates title screen"
