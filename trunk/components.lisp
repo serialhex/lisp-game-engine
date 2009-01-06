@@ -96,7 +96,10 @@
       ('update
 	 (let ((text-comp (find-component-with-type owner 'text)))
 	   (with-slots (string) text-comp 
-	     (setf string (format nil "fps: ~2$" (coerce (sdl:average-fps) 'single-float))))))))) 
+	     (setf string (format nil "fps: ~3$"
+				  (/ 1.0 (sdl:frame-time))))))))))
+
+
        
 
 

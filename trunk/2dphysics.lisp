@@ -1,8 +1,9 @@
 ; 2d physics component
 
-;;;; TODO add rotational velocity and
-;;;; acceleration here when needed
-;;;; and different collision responses
+; todo
+; add different types of collision shape (just rectangle now, could use sphere and 
+; perhaps a polygon the user provides, or pixel perfect based on mask colour of 
+; associated image)
 (defclass 2d-physics (component)
   ((x :initform 0.0 :initarg :x)
    (y :initform 0.0 :initarg :y)
@@ -65,17 +66,21 @@
 
 (defmethod handle-message((comp 2d-physics) message-type &rest rest)
   (let ((owner (slot-value comp 'owner)))
+
     (case message-type 
       ; do game logic type think step
       ('update
-       (with-slots (x y vx vy ax ay) comp
-	 ;accelerate
-	 (incf vx ax)
-	 (incf vy ay)
+       (let ((dt (first rest)))
+
+	 (with-slots (x y vx vy ax ay) comp
+
+	 ; accelerate
+	   (incf vx (* ax dt))
+	   (incf vy (* ay dt))
          
          ; move
-	 (incf x vx)
-	 (incf y vy)))
+	   (incf x (* vx dt))
+	   (incf y (* vy dt)))))
 
       ; handle collisions
       ('collide
@@ -85,10 +90,6 @@
       ('draw
        ; show debug collision data
        (if (and *debug-collision* (slot-value comp 'collision-list))
-;	   (let ((color 
-;		  (if (slot-value comp 'collision-list)
-;		      (sdl:color :r #xff)
-;		      (sdl:color :g #xff))))
 	   (let ((color (sdl:color :r #xff)))
 	     (with-slots (x y width height) comp
 	       (sdl:draw-box

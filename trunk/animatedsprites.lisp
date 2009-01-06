@@ -1,8 +1,5 @@
 ; animated sprite component 
 
-
-;;;; TODO need positional info (where to draw the sprite 
-;;;; relative to the 2d-physics-component)
 (defclass animated-sprite(component)
   ((sprite-def :initform nil :initarg :sprite-def)
    (current-frame :initform nil :initarg :current-frame)
@@ -12,11 +9,11 @@
 (defmethod handle-message((comp animated-sprite) message-type &rest rest)
   (let ((owner (slot-value comp 'owner)))
     (case message-type 
-      ('initialise
+      ('reset
        (sprites:load-sprite-image (slot-value comp 'sprite-def)))
       ('update
        (let ((time-elapsed (first rest)))
-	 ;;Determine the current animation frame based on time elapsed"
+	 ; Determine the current animation frame based on time elapsed
 	 (with-slots 
 	       (current-frame speed time-playing sprite-def) 
 	     comp
@@ -26,7 +23,7 @@
 	     (setf current-frame
 		   (sprites:get-sprite-frame-with-index 
 		    (sprites:sprite-def-frames sprite-def) frame-num)))
-	   ;; now inform the physics object of our dimensions based on the sprite
+	   ; Now inform the physics object of our dimensions based on the sprite
 	   (multiple-value-bind (spr-width spr-height)
 	       (sprites:get-sprite-frame-width-and-height sprite-def current-frame)
 	     (let ((phys-comp (find-component-with-type owner '2d-physics)))

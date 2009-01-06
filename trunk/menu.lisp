@@ -56,7 +56,7 @@
 		((sdl:key-pressed-p :SDL-KEY-RETURN)
 		 (if (and selected-p action)
 		     (funcall action))))
-	 (setf time-selected (+ (/ 1.0 (sdl:frame-rate)))))))))
+	 (setf time-selected (+ (sdl:frame-time))))))))
 	  
 (defun make-menu-item(text x y justification action default-color selected-color)
   "returns a menu item made up of a text object and a menu component"
