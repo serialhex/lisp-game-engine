@@ -377,7 +377,8 @@ locate it correctly horizontally"
     obj))
 
 (defun action-quit-engine()
-  (format t "Goodbye~%"))
+  (format t "Goodbye~%")
+  (sdl:push-quit-event))
 
 (defun action-start-game()
   "starts the game by going to the gameplay level"

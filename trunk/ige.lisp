@@ -80,7 +80,8 @@
   (sdl:quit-input-util)
   (sdl:quit-subsystems)
   (sdl:quit-sdl)
-  (setf *engine-active* nil))
+  (setf *engine-active* nil)
+  t)
 
 ; Note this works in lispworks, kinda, you can run the main loop in a seperate 
 ; process
