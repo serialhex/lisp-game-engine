@@ -365,14 +365,16 @@ locate it correctly horizontally"
 			     :vx (random-range 4.0 10.0) :vy (random-range -8.0 8.0)
 			     :collide-type 'ball
 			     :collide-with-types '(paddle)))
-	(anim (make-instance 'animated-sprite
-			     :sprite-def ball-sprite :current-frame 'frame-1
-			     :speed 8.0))
+	;; (visual (make-instance 'animated-sprite
+	;; 		     :sprite-def ball-sprite :current-frame 'frame-1
+	;; 		     :speed 8.0))
+	(visual (make-instance 'rectangle
+				  :w 20 :h 80))
 	(ball (make-instance 'ball-logic))
 	(obj (make-instance 'composite-object
 			    :name "ball")))
     (add-component obj phys)
-    (add-component obj anim)
+    (add-component obj visual)
     (add-component obj ball)
     obj))
 

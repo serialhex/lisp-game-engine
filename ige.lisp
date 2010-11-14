@@ -37,7 +37,7 @@
 (load "2dphysics")
 (load "animatedsprites")
 (load "text")
-
+(load "rectangles")
 (load "menu") ; menu system
 (load "game") ; game and level management
 
@@ -63,11 +63,11 @@
   (setf *FULL-SCREEN-P* full-screen-p)
   ; init game engine
   (sdl:init-sdl :flags SDL:SDL-INIT-AUDIO)  
-  (sdl:init-subsystems)
-  (setf (sdl:frame-rate) *FRAME-RATE*)
+  ;(sdl:init-subsystems)
   (sdl:window window-width window-height 
 	      :flags (engine-get-window-flags full-screen-p)
 	      :title-caption "Game engine" :icon-caption "Game engine")
+  (setf (sdl:frame-rate) *FRAME-RATE*)
   (sdl:initialise-default-font)
   (sdl:initialise-input-util) 
   (setf *engine-active* t))
@@ -78,7 +78,7 @@
       (error "engine-init was not called"))
   (sprites:flush-image-cache)
   (sdl:quit-input-util)
-  (sdl:quit-subsystems)
+  ;(sdl:quit-subsystems)
   (sdl:quit-sdl)
   (setf *engine-active* nil)
   t)
@@ -96,12 +96,11 @@
 
   (sdl:with-events  ()
     (:quit-event () t)
+
     (:key-down-event (:key key)
-		     (sdl:handle-key-down key)
 		     (if (sdl:key= key :SDL-KEY-ESCAPE)
 			 (sdl:push-quit-event)))
-    (:key-up-event (:key key)
-		     (sdl:handle-key-up key))
+
     (:idle () ;; redraw screen on idle
 	   
            ; set frame rate and cursor visiblity
@@ -110,9 +109,13 @@
 
 	   ;; fill the background
 	   (sdl:clear-display *BG-COLOR*)
+
+	   (if (sdl:key-pressed-p :SDL-KEY-UP)
+	       (format t "chips~%"))
+
 	   (engine-update-game)
-	   (sdl:update-display)
-	   (sdl:update-input-util (sdl:frame-time)))))
+	   (sdl:update-display))))
+	   ;(sdl:update-input-util (sdl:frame-time)
 
 (defun engine-get-game()
   *engine-game*)
