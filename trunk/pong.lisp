@@ -2,10 +2,17 @@
 
 ; TODO
 
+; sound via fmod or lispbuilder audio if I can get it working
+
+; bigger font for score (done but needs to use the font library to make it better)
+
+; ball starts in centre
+
 ; limit paddles to court bounds... court bounds just globals
 
 ; DONE animated sprites need a handle. an offset to draw them at. for example, the balls physics position should be the
 ; center of the bitmap. so the physics works as it does now, but the draw position is at a user specified offset
+
 ; DONE set it up so paddles work. 
 
 ; DONE add message system so ball is dummer.. reset message, serve message (direction)
@@ -20,19 +27,20 @@
 
 ; quit game does not exit engine (bug?)
 
-; rework collision so it works properly, not just reflect
+; IMPORTANT rework collision so it works properly, not just reflect
 
-; ball prediction not working
+; IMPORTANT ball prediction not working
 
 ; DONE ball speed (need to launch at range of angles, same speed all the time)
 
 ;; load sprite info
 
+; todo remove
 (load "pongspritedefs") ; 
 
 ; parameters
 
-(defparameter *paddle-side-offset* 30.0 "How far from the edges the paddles are")
+(defparameter *paddle-side-offset* 80.0 "How far from the edges the paddles are")
 
 (defparameter *paddle-start-y* (/ *WINDOW-HEIGHT* 2))
 (defparameter *between-play-pause* 3.0)
@@ -42,7 +50,7 @@
 (defparameter *player-max-paddle-speed* 800.0)
 (defparameter *player-paddle-accel* 2600.0)
 (defparameter *hard-ai-paddle-speed* 60.0)
-(defparameter *win-score* 20)
+(defparameter *win-score* 10)
 
 (defparameter *left-player-up-key* :SDL-KEY-q)
 (defparameter *left-player-down-key* :SDL-KEY-z)
@@ -56,6 +64,13 @@
 (defparameter *court-screen-bottom-offset* 10)
 (defparameter *court-screen-left-offset* 10)
 (defparameter *court-screen-right-offset* 10)
+
+; ball and paddle setup
+
+(defparameter *ball-size* 6)
+
+(defparameter *paddle-width* 8)
+(defparameter *paddle-height* 32)
 
 (defun court-x-center()
   (+ *court-screen-left-offset*
@@ -342,14 +357,17 @@ locate it correctly horizontally"
 
 (defun make-pong-player(side human sprite-def control-type name)
   (let ((phys (make-instance '2d-physics
-			     :collide-type 'paddle :y *paddle-start-y*))
-	(anim (make-instance 'animated-sprite :sprite-def sprite-def
-			     :current-frame 'frame-1 :speed 5.0))
+			     :collide-type 'paddle :y *paddle-start-y* :width *paddle-width* :height *paddle-height*))
+;	(anim (make-instance 'animated-sprite :sprite-def sprite-def
+;			     :current-frame 'frame-1 :speed 5.0))
+	(visual (make-instance 'rectangle
+				  :w *paddle-width* :h *paddle-height*))
 	(pong (make-instance 'player-paddle-logic
 			     :control-type control-type :side side))
 	(obj (make-instance 'composite-object :name name)))
     (add-component obj phys)
-    (add-component obj anim)
+    (add-component obj visual)
+;    (add-component obj anim)
     (add-component obj pong)
     obj))
 
@@ -363,13 +381,14 @@ locate it correctly horizontally"
   (let ((phys (make-instance '2d-physics
 			     :x (random-range 0.0 *WINDOW-WIDTH*) :y (random-range 0.0 *WINDOW-HEIGHT*) 
 			     :vx (random-range 4.0 10.0) :vy (random-range -8.0 8.0)
+			     :width *ball-size* :height *ball-size*
 			     :collide-type 'ball
 			     :collide-with-types '(paddle)))
 	;; (visual (make-instance 'animated-sprite
 	;; 		     :sprite-def ball-sprite :current-frame 'frame-1
 	;; 		     :speed 8.0))
 	(visual (make-instance 'rectangle
-				  :w 20 :h 80))
+				  :w *ball-size* :h *ball-size*))
 	(ball (make-instance 'ball-logic))
 	(obj (make-instance 'composite-object
 			    :name "ball")))
@@ -498,14 +517,33 @@ and the specified text properties"
       ('update
        t)
       ('draw
-       ; draw the screen bounds
+       ; draw the dotted lines for the net
        (with-slots (left-offset right-offset top-offset bottom-offset) court-comp
-	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
-	 (sdl:draw-vline left-offset top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
-	 (sdl:draw-vline (- *WINDOW-WIDTH* right-offset) top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))
-	 (sdl:draw-hline left-offset (- *WINDOW-WIDTH* right-offset) top-offset :color (sdl:color :r 255 :g 255 :b 255))
-	 (let ((center (round (+ left-offset (/ (- (- *WINDOW-WIDTH* right-offset) left-offset) 2.0)))))
-	   (sdl:draw-vline center top-offset (- *WINDOW-HEIGHT* bottom-offset) :color (sdl:color :r 255 :g 255 :b 255))))))))
+         
+	 (let ((center (round (+ left-offset (/ (- (- *WINDOW-WIDTH* right-offset) left-offset) 2.0))))
+	       (segments 30.0) (gap-ratio 0.4) 
+	       (bottom (- *WINDOW-HEIGHT* bottom-offset)))
+	   (let* ((total-height (- bottom top-offset))
+		  (segment-height (/ total-height segments)))
+	     (loop for y from 0 to (- segments 1) do
+		  ; need a thickness parameter for the draw vertical line call, but let's be lazy 
+		  ; and just call it three times
+		  (sdl:draw-vline 
+		   (1+ center)
+		   (round (+ top-offset (* y segment-height)))
+		   (round (+ top-offset (* y segment-height) (* (- 1.0 gap-ratio) segment-height)))
+		   :color (sdl:color :r 255 :g 255 :b 255))
+		  (sdl:draw-vline 
+		   center 
+		   (round (+ top-offset (* y segment-height)))
+		   (round (+ top-offset (* y segment-height) (* (- 1.0 gap-ratio) segment-height)))
+		   :color (sdl:color :r 255 :g 255 :b 255))
+		  (sdl:draw-vline 
+		   (1- center)
+		   (round (+ top-offset (* y segment-height)))
+		   (round (+ top-offset (* y segment-height) (* (- 1.0 gap-ratio) segment-height)))
+		   :color (sdl:color :r 255 :g 255 :b 255))))))))))
+
 
 (defun make-court()
   (let ((court (make-instance 'court
@@ -528,7 +566,7 @@ and the specified text properties"
     (level-add-object level (make-score-text 'left))
     (level-add-object level (make-score-text 'right))
     (level-add-object level (make-court))
-    (level-add-object level (make-background))
+;    (level-add-object level (make-background))
     level))
 
 (defun make-pong()
