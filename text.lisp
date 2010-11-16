@@ -3,7 +3,8 @@
 (defclass text (component)
   ((string :initform "" :initarg :string)
    (justification :initform :left :initarg :justification)
-   (color :initform (sdl:color :r #xff :g #xff :b #xff) :initarg :color)))
+   (color :initform (sdl:color :r #xff :g #xff :b #xff) :initarg :color)
+   (font :initform (sdl:initialise-default-font sdl:*font-10x20*))))
 
 (defmethod handle-message((comp text) message-type &rest rest)
   (let ((owner (slot-value comp 'owner)))
